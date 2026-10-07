@@ -51,4 +51,4 @@ No experiment was performed or fitted. The model is lumped, ignores diffusion co
 
 ## Citation
 
-Software: see the Zenodo record linked from the release. Manuscript preprint: see the Zenodo record linked from the release. MIT licence (code); CC BY 4.0 (manuscript).
+Software: [10.5281/zenodo.23201763](https://doi.org/10.5281/zenodo.23201763) (concept DOI 10.5281/zenodo.23201762). Manuscript preprint: [10.5281/zenodo.23201767](https://doi.org/10.5281/zenodo.23201767) (concept DOI 10.5281/zenodo.23201766). MIT licence (code); CC BY 4.0 (manuscript).
