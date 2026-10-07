@@ -68,7 +68,7 @@ def integrate(Tinf, tau_th=TAU_TH, rel_scale=1.0, Tmelt=T_MELT, width=W_DEF, off
 
     def f(T, C, a):
         TK = np.clip(T + 273.15, 50.0, None)
-        ac = np.clip(a, 0.0, 0.999)
+        ac = np.clip(a, 0.0, 1.0)
         if gated:
             krel = (A_REL * np.exp(-EA_REL / (R_GAS * TK)))[:, None] / rel_scale
             dC = krel * (gate(T[:, None], Tmelt[:, None] + off[None, :], width[:, None]) - C)
@@ -76,10 +76,9 @@ def integrate(Tinf, tau_th=TAU_TH, rel_scale=1.0, Tmelt=T_MELT, width=W_DEF, off
             dC = np.zeros_like(C)
         Ce = C.mean(axis=1)
         if mode == "auto":
-            da = Ce * (A1 * np.exp(-ea1 / (R_GAS * TK)) + a2 * np.exp(-ea2 / (R_GAS * TK)) * np.maximum(ac, 1e-6) ** m) * (1 - ac) ** n
+            da = Ce * (A1 * np.exp(-ea1 / (R_GAS * TK)) + a2 * np.exp(-ea2 / (R_GAS * TK)) * ac ** m) * (1 - ac) ** n
         else:
             da = Ce * kfirst * np.exp(-eac / R_GAS * (1.0 / TK - 1.0 / Tref_K)) * (1 - ac) ** nord
-        da = np.where(a >= 0.999, 0.0, da)       # reaction complete: no further heat (conserves energy; the v2 clip left a small residual source)
         return (Tinf - T) / tau_th + dtad * da, dC, da
 
     for i in range(1, nsteps + 1):
@@ -90,7 +89,7 @@ def integrate(Tinf, tau_th=TAU_TH, rel_scale=1.0, Tmelt=T_MELT, width=W_DEF, off
         a_prev = a
         T = T + dt / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0])
         C = np.clip(C + dt / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]), 0.0, 1.0)
-        a = np.clip(a + dt / 6 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]), 0.0, 0.999)
+        a = np.clip(a + dt / 6 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]), 0.0, 1.0)
         Tmax = np.maximum(Tmax, T)
         for arr, thr in ((t10, 0.10), (t50, 0.50), (t90, 0.90)):
             new = np.isnan(arr) & (a >= thr)

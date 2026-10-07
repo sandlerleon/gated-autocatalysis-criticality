@@ -9,11 +9,11 @@ This repository derives what can be written in closed form for the lumped model 
 
 | | Result | Verified against the full model |
 |---|---|---|
-| Prop. 1 | At constant T the gated cure is the isothermal cure on the clock of integrated availability: every conversion level is delayed by the release time constant | relative error about 1e-8 |
-| Prop. 2 | Isothermal time exact by quadrature (closed form for n = 1); sharpness S ≈ 2 ln 9 / ln(k2/9k1) | quadrature exact; law within 5 % |
-| Prop. 3 | Storage conversion of a Gaussian capsule population, f = Φ(−Δ/σ_eff); closed-form design rule for the largest admissible spread σ* | within a few % of the population ODE |
-| Prop. 4 | Critical thermal-feedback number Π_c = ψΘ = e⁻¹(1+n)^(1+n)/n^n (1.98 for n = 3/2), Lambert-W overshoot, fold normal form, Arrhenius factor exp(1/Ar) | bisected integrations, 0.5 % as Θ → 0 |
-| Prop. 5 | Continuous-flow reactor: bistability threshold κ_c, S-curve, static hysteresis-loop area, extrapolation to zero sweep rate | loop areas converge to the static value |
+| Prop. 1 | At constant T the gated cure is the isothermal cure on the clock of integrated availability; the delay of a fully open population is tau_rel[1 - exp(-t/tau_rel)] (conversion dependent) | relative error below 1e-6 |
+| Prop. 2 | Isothermal time exact by quadrature (closed form for n = 1); exact n = 1 sharpness and its asymptotic law | quadrature exact; law within 5 % (n = 1 only) |
+| Prop. 3 | Storage conversion (a/b)[exp(b f t_eff) - 1], f = Φ(−Δ/σ_eff); exact inversion for the largest admissible spread σ* (domain 0 < f* < 1/2) | within 3 % of the population ODE |
+| Prop. 4 | Frozen-conversion critical number Π_c = (1+n)^(1+n) / [e n^n (1+ε)^(1+n)], Lambert-W overshoot, Arrhenius factor (frozen-fold factor; exp(1/Ar) first order) | operational thresholds, 0.4–0.6 % as Θ → 0; Arrhenius grid within 5 % |
+| Prop. 5 | Continuous-flow reactor: equilibrium multiplicity (κ_c), Jacobian, stable window (the upper branch can lose stability at a Hopf-type point before its fold), attractor loop area | attractor scans; sweep areas converge slowly (sublinear) |
 
 ## Layout
 
@@ -21,9 +21,9 @@ This repository derives what can be written in closed form for the lumped model 
 code/theory.py          the closed forms (pure functions)
 code/core.py            reference model: vectorised RK4 of the T-C-alpha system with a capsule population
 code/numerics.py        adaptive stiff integrations for the criticality and flow-reactor results
-code/run_all.py         every result table -> results.json (about 5 minutes)
+code/run_all.py         every result table -> results.json (about 6 minutes)
 code/figures.py         Figures 1-5
-code/test_theory.py     17 fast checks of the closed forms against the numerics
+code/test_theory.py     38 checks of the closed forms against the numerics (about 2 minutes)
 refs/build_refs.py      every journal reference harvested from Crossref
 manuscript/             builder (reads results.json) and the manuscript
 tools/                  Zenodo reservation/publication scripts (token from ZENODO_TOKEN, never stored)

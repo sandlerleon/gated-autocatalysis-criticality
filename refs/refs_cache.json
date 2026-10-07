@@ -65,6 +65,42 @@
   "title": "Influence of Filler Content and Filler Size on the Curing Kinetics of an Epoxy Resin",
   "year": 2019
  },
+ "ozawa1965": {
+  "doi": "10.1246/bcsj.38.1881",
+  "entry": "Ozawa T. A New Method of Analyzing Thermogravimetric Data. Bulletin of the Chemical Society of Japan. 1965;38:1881–1886. https://doi.org/10.1246/bcsj.38.1881",
+  "title": "A New Method of Analyzing Thermogravimetric Data",
+  "year": 1965
+ },
+ "adler1964": {
+  "doi": "10.1016/0010-2180(64)90035-5",
+  "entry": "Adler J, Enig JW. The critical conditions in thermal explosion theory with reactant consumption. Combustion and Flame. 1964;8:97–103. https://doi.org/10.1016/0010-2180(64)90035-5",
+  "title": "The critical conditions in thermal explosion theory with reactant consumption",
+  "year": 1964
+ },
+ "kassoy1980": {
+  "doi": "10.1137/0139035",
+  "entry": "Kassoy DR, Poland J. The Thermal Explosion Confined by a Constant Temperature Boundary:I—The Induction Period Solution. SIAM J Appl Math. 1980;39:412–430. https://doi.org/10.1137/0139035",
+  "title": "The Thermal Explosion Confined by a Constant Temperature Boundary:I—The Induction Period Solution",
+  "year": 1980
+ },
+ "aris1958": {
+  "doi": "10.1016/0009-2509(58)80019-6",
+  "entry": "Aris R, Amundson NR. An analysis of chemical reactor stability and control—I. Chemical Engineering Science. 1958;7:121–131. https://doi.org/10.1016/0009-2509(58)80019-6",
+  "title": "An analysis of chemical reactor stability and control—I",
+  "year": 1958
+ },
+ "uppal1974": {
+  "doi": "10.1016/0009-2509(74)80089-8",
+  "entry": "Uppal A, Ray WH, Poore AB. On the dynamic behavior of continuous stirred tank reactors. Chemical Engineering Science. 1974;29:967–985. https://doi.org/10.1016/0009-2509(74)80089-8",
+  "title": "On the dynamic behavior of continuous stirred tank reactors",
+  "year": 1974
+ },
+ "siepmann2012": {
+  "doi": "10.1016/j.jconrel.2011.10.006",
+  "entry": "Siepmann J, Siepmann F. Modeling of diffusion controlled drug delivery. Journal of Controlled Release. 2012;161:351–362. https://doi.org/10.1016/j.jconrel.2011.10.006",
+  "title": "Modeling of diffusion controlled drug delivery",
+  "year": 2012
+ },
  "frankkamenetskii1969": {
   "doi": null,
   "entry": "Frank-Kamenetskii DA. Diffusion and Heat Transfer in Chemical Kinetics, 2nd ed. New York: Plenum Press; 1969."

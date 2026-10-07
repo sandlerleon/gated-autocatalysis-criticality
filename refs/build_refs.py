@@ -16,6 +16,8 @@ DOIS = {
     "saltelli2010": "10.1016/j.cpc.2009.09.018", "vyazovkin2011": "10.1016/j.tca.2011.03.034", "white2001": "10.1038/35057232",
     "jamekhorshid2014": "10.1016/j.rser.2013.12.033", "bogetti1992": "10.1177/002199839202600502", "semenov1928": "10.1007/bf01340021",
     "vanheerden1953": "10.1021/ie50522a030", "zhao2019": "10.3390/polym11111797",
+    "ozawa1965": "10.1246/bcsj.38.1881", "adler1964": "10.1016/0010-2180(64)90035-5", "kassoy1980": "10.1137/0139035", "aris1958": "10.1016/0009-2509(58)80019-6",
+    "uppal1974": "10.1016/0009-2509(74)80089-8", "siepmann2012": "10.1016/j.jconrel.2011.10.006",
 }
 MANUAL = {
     "frankkamenetskii1969": "Frank-Kamenetskii DA. Diffusion and Heat Transfer in Chemical Kinetics, 2nd ed. New York: Plenum Press; 1969.",

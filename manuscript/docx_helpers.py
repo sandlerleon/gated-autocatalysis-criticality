@@ -148,13 +148,17 @@ def caption(doc, text, size=9.5, keep_next=False):
     return p
 
 
-def figure(doc, path, width_in=6.4, cap=None):
+def figure(doc, path, width_in=6.4, cap=None, alt=None):
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_before = Pt(8)
     p.paragraph_format.space_after = Pt(2)
     p.paragraph_format.keep_with_next = True
-    p.add_run().add_picture(path, width=Inches(width_in))
+    run = p.add_run()
+    run.add_picture(path, width=Inches(width_in))
+    if alt:
+        for dp in run._r.xpath(".//wp:docPr"):
+            dp.set("descr", alt)
     if cap:
         caption(doc, cap)
 

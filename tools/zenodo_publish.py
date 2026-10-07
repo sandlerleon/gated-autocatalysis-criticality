@@ -40,6 +40,7 @@ is logarithmic in the rate-constant ratio; the storage conversion of a Gaussian 
 feedback has a critical number e^-1 (1+n)^(1+n)/n^n with Lambert-W overshoot and an Arrhenius correction exp(1/Ar); and a continuous-flow reactor shows ignition-extinction hysteresis
 whose static loop area is the zero-sweep-rate limit of the dynamic loops. Every result is tested against the full equations. The parameter set and capsule-population picture come from an earlier
 numerical preprint of the author (doi 10.5281/zenodo.22073390).</p>"""
+NEWVER = "<p><strong>Version %s.</strong> Revised after an independent readiness review: the flow-reactor section now analyzes stability (the upper steady branch can lose stability at a Hopf-type point before its fold, so the window of two stable states, the attractor loop area and the sweep convergence are recomputed); the delay of the gated cure is conversion dependent (tau_rel [1 - exp(-t/tau_rel)]); the storage bound is stated in exact closed form with its domain; the thermal-criticality statement is limited to the frozen-conversion fold with a finite-epsilon formula, and the Arrhenius correction is an empirical approximation; the energy balance is conserved exactly; convergence studies, solver settings and pinned versions are reported; the AI-assistance statement names the tool and version.</p>"
 DESC_CODE = ABOUT + """<p>Contents: closed forms (<code>code/theory.py</code>), reference model and numerics, tests, the script that produces every result table, figure scripts, the
 reference harvest (Crossref), the manuscript builder. Manuscript preprint: <a href="https://doi.org/{PP}">{PP}</a>.</p>"""
 DESC_PAPER = ABOUT + """<p>Code and results: <a href="%s">%s</a>, archived at <a href="https://doi.org/{SW}">{SW}</a>.</p>""" % (GITHUB, GITHUB)
@@ -91,7 +92,7 @@ def software():
     print("=== software draft %s (reserved DOI %s)" % (d["id"], d["doi"]))
     clear_inherited(d)
     upload(d["bucket"], tmp, os.path.basename(tmp))
-    meta = {"title": TITLE_CODE, "upload_type": "software", "description": DESC_CODE.replace("{PP}", st.get("publication_v" + MS, st["publication"])["doi"]),
+    meta = {"title": TITLE_CODE, "upload_type": "software", "description": (NEWVER % VERSION if VERSION != "1.0.0" else "") + DESC_CODE.replace("{PP}", st.get("publication_v" + MS, st["publication"])["doi"]),
             "creators": CREATORS, "keywords": KEYWORDS, "access_right": "open", "license": "mit-license", "version": VERSION, "language": "eng",
             "prereserve_doi": {"doi": d["doi"]},
             "related_identifiers": [{"identifier": GITHUB + "/tree/" + TAG, "relation": "isSupplementTo", "scheme": "url"},
@@ -107,7 +108,7 @@ def preprint():
     for name in ("Gated_Autocatalysis_Criticality_JCP.docx", "Gated_Autocatalysis_Criticality_JCP.pdf"):
         upload(d["bucket"], os.path.join(REPO, "manuscript", name), name)
     meta = {"title": TITLE_PAPER, "upload_type": "publication", "publication_type": "preprint",
-            "description": DESC_PAPER.replace("{SW}", st.get("software_" + VERSION, st["software"])["doi"]), "creators": CREATORS, "keywords": KEYWORDS, "access_right": "open",
+            "description": (NEWVER % ("v" + MS) if MS != "1" else "") + DESC_PAPER.replace("{SW}", st.get("software_" + VERSION, st["software"])["doi"]), "creators": CREATORS, "keywords": KEYWORDS, "access_right": "open",
             "license": "cc-by-4.0", "version": MS, "language": "eng", "prereserve_doi": {"doi": d["doi"]},
             "related_identifiers": [{"identifier": st.get("software_" + VERSION, st["software"])["doi"], "relation": "isSupplementedBy", "scheme": "doi"},
                                     {"identifier": GITHUB, "relation": "isSupplementedBy", "scheme": "url"}]}
