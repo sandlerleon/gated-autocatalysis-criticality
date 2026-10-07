@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+manuscript/out/
+run.log
+nohup.out
