@@ -46,7 +46,8 @@ DESC_PAPER = ABOUT + """<p>Code and results: <a href="%s">%s</a>, archived at <a
 
 
 def clear_inherited(d):
-    return None
+    for f in req("GET", "%s/deposit/depositions/%s/files" % (API, d["id"])):
+        req("DELETE", "%s/deposit/depositions/%s/files/%s" % (API, d["id"], f["id"]))
 
 
 def req(method, url, data=None, headers=None, raw=None):
@@ -103,7 +104,7 @@ def preprint():
     d = st["publication_v" + MS] if "publication_v" + MS in st else st["publication"]
     print("=== preprint draft %s (reserved DOI %s)" % (d["id"], d["doi"]))
     clear_inherited(d)
-    for name in ("Gated_Autocatalysis_Criticality_JCP.docx", "Gated_Autocatalysis_Criticality_JCP.pdf", "Cover_Letter_JCP.docx"):
+    for name in ("Gated_Autocatalysis_Criticality_JCP.docx", "Gated_Autocatalysis_Criticality_JCP.pdf"):
         upload(d["bucket"], os.path.join(REPO, "manuscript", name), name)
     meta = {"title": TITLE_PAPER, "upload_type": "publication", "publication_type": "preprint",
             "description": DESC_PAPER.replace("{SW}", st.get("software_" + VERSION, st["software"])["doi"]), "creators": CREATORS, "keywords": KEYWORDS, "access_right": "open",
