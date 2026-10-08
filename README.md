@@ -56,3 +56,7 @@ Software: [10.5281/zenodo.23201763](https://doi.org/10.5281/zenodo.23201763) (co
 ## v1.3.0
 
 Retargeted to *Reaction Kinetics, Mechanisms and Catalysis*: Springer numbering and declarations, 244-word abstract and highlights, Springer reference style, restyled figures (no in-figure titles), new Section 1.1 on the relation to the author's earlier AutoLatch preprint and journal submission, selective merge of a Rubriq language edit (`manuscript/merge_rubriq*.py`). The numerical results are unchanged from v1.2.0 (`results.json` identical).
+
+## v1.3.1
+
+Storage-conversion and design-rule comparisons recomputed with K = 3201 capsule quantiles (K = 801 left a 1 % discretization error at sigma = 2 C; convergence now against K = 6401); the storage inversion is described as exact only within the Gaussian-logistic small-conversion model; Propositions 4 and 5 are stated as derived for a fully released (ungated) catalyst in abstract, conclusion and open problems; duplicated 'Table Table' references fixed. Other results are identical to v1.3.0.

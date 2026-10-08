@@ -31,3 +31,13 @@ Things the review asked for that remain open: a real-data comparison; the unstab
 | Overlap with the AutoLatch study | New Section 1.1 'Relationship to previous computational work' cites the AutoLatch preprint (ChemRxiv/Zenodo) and the v3.1 archive, states that the coupled kinetic model, the parameter set and the integrator are not claimed as new, that no figure is reproduced, and points to the provenance table; the cover letter discloses the related submission and offers the earlier manuscript. |
 | Rubriq pass | 82 punctuation and word-choice hunks merged selectively (comma fixes, increase for rise, approximately for about, percent spacing); 214 rejected, among them changes that altered the science or introduced errors ('gate curve', 'twofold-fold greater than', '%3%', 'Quasinist', 'Kemenetskii', 'xxol'). |
 | Files | docx only; PDFs removed from the repository and not deposited. |
+
+
+## v1.3.1: readiness review for RKMC (7 October 2026)
+
+| Item | What was done |
+|---|---|
+| Storage bound described as exact | Qualified in the manuscript (Proposition 3, status table) and cover letter: the inversion is exact only within the Gaussian-logistic, small-conversion model. |
+| Numerical convergence | Storage and design-rule comparisons rerun with K = 3201 quantiles; convergence study extended to K = 3201 against a K = 6401 reference (discretization error at K = 3201 is 4.9e-4 at sigma = 2 C, against 1.1e-2 at K = 801); Appendix A separates discretization error from formula error. Design-rule agreement remains within 3 %. |
+| Duplicated 'Table Table' | Fixed in Section 5 and Appendix A. |
+| Ungated scope of Propositions 4 and 5 | Stated in abstract, conclusion, a new open problem (g) and the cover letter. |

@@ -49,7 +49,7 @@ check("a hundredfold change of b/a (159 to 15,900) changes the exact S by a fact
       "S = %.3f and %.3f" % (T.sharpness_exact_n1(1.0, 159.0), T.sharpness_exact_n1(1.0, 15900.0)))
 
 # Proposition 3 -------------------------------------------------------------------------------------------------------
-K = 801
+K = 3201          # storage-conversion checks use the refined population (K = 801 has ~1 % discretization error at sigma = 2 C)
 zq = norm.ppf((np.arange(K) + 0.5) / K)
 Ts = 112.0
 a, b, kr = rates(Ts)

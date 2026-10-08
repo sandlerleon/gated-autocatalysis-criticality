@@ -27,6 +27,10 @@ t0 = time.time()
 n_ord, eps_fk = C.N_EXP, 3e-3
 K = 801
 zq = norm.ppf((np.arange(K) + 0.5) / K)
+K_STORE, K_REF = 3201, 6401          # storage-conversion comparisons (Section 3.3) use the finer population; K_REF is the convergence reference
+zq_store = norm.ppf((np.arange(K_STORE) + 0.5) / K_STORE)
+RES["K_storage"] = K_STORE
+RES["K_reference"] = K_REF
 
 
 def rates(T_C):
@@ -86,7 +90,7 @@ for margin in (3.0, 6.0, 10.0):
     Ts = 118.0 - margin
     a, b, kr = rates(Ts)
     for sg in (2.0, 4.0, 6.0, 10.0):
-        num = float(C.integrate([Ts], Tmelt=118.0, width=0.5, off=sg * zq, dt=0.05, T0_off=0.0)["a_end"][0])
+        num = float(C.integrate([Ts], Tmelt=118.0, width=0.5, off=sg * zq_store, dt=0.05, T0_off=0.0)["a_end"][0])
         f = T.f_active(margin, sg)
         rows.append(dict(margin=margin, sigma=sg, f=f, numeric=num, closed_form=float(T.leak(f, a, b, kr, T_STORAGE_MIN)), quadrature=float(T.leak_quad(f, a, b, kr, T_STORAGE_MIN))))
 RES["leakage"] = rows
@@ -100,7 +104,7 @@ for margin in (3.0, 6.0, 10.0):
     for eta in (0.001, 0.01, 0.05):
         s_an = T.sigma_star(eta, margin, a, b, kr, T_STORAGE_MIN)
         s_an0 = T.sigma_star(eta, margin, a, b, kr, T_STORAGE_MIN, w0=0.0)
-        fnum = lambda sg: float(C.integrate([Ts], Tmelt=118.0, width=0.5, off=sg * zq, dt=0.05, T0_off=0.0)["a_end"][0]) - eta
+        fnum = lambda sg: float(C.integrate([Ts], Tmelt=118.0, width=0.5, off=sg * zq_store, dt=0.05, T0_off=0.0)["a_end"][0]) - eta
         try:
             s_num = brentq(fnum, 0.3, 40.0, xtol=1e-3) if fnum(40.0) > 0 else None
         except ValueError:
@@ -116,10 +120,10 @@ RES["design_rule"] = rows
 Ts = 112.0
 conv = []
 ref = {}
-zz3201 = norm.ppf((np.arange(3201) + 0.5) / 3201)
+zz_ref = norm.ppf((np.arange(K_REF) + 0.5) / K_REF)
 for sg in (2.0, 4.0, 6.0):
-    ref[sg] = float(C.integrate([Ts], Tmelt=118.0, width=0.5, off=sg * zz3201, dt=0.05, T0_off=0.0)["a_end"][0])
-for Kc in (101, 201, 401, 801, 1601):
+    ref[sg] = float(C.integrate([Ts], Tmelt=118.0, width=0.5, off=sg * zz_ref, dt=0.05, T0_off=0.0)["a_end"][0])
+for Kc in (101, 201, 401, 801, 1601, 3201):
     zz = norm.ppf((np.arange(Kc) + 0.5) / Kc)
     for sg in (2.0, 4.0, 6.0):
         v = float(C.integrate([Ts], Tmelt=118.0, width=0.5, off=sg * zz, dt=0.05, T0_off=0.0)["a_end"][0])
@@ -131,7 +135,7 @@ for dt in (0.2, 0.1, 0.05, 0.025, 0.0125):
 for (dt, sg), v in vals_dt.items():
     conv.append(dict(kind="dt", K=K, dt=dt, sigma=sg, value=v, reference=vals_dt[(0.0125, sg)], rel_diff=v / vals_dt[(0.0125, sg)] - 1))
 RES["convergence"] = conv
-log("E3 convergence: K = 801 vs 3201 max |diff| %.2e; dt = 0.05 vs 0.0125 max |diff| %.2e" % (max(abs(c["rel_diff"]) for c in conv if c["kind"] == "K" and c["K"] == 801),
+log("E3 convergence: K = 801 vs 6401 max |diff| %.2e; dt = 0.05 vs 0.0125 max |diff| %.2e" % (max(abs(c["rel_diff"]) for c in conv if c["kind"] == "K" and c["K"] == 801),
                                                                                          max(abs(c["rel_diff"]) for c in conv if c["kind"] == "dt" and c["dt"] == 0.05)))
 
 # ---- synthetic-data recovery of (T_m, sigma) from isothermal storage curves
