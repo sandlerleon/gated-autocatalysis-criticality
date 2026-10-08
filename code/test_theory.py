@@ -129,6 +129,21 @@ below = N.flow_attractor(-5.50, 20.0, vt, start_on_upper(-5.50), eps=eps, n=n, t
 above = N.flow_attractor(-5.35, 20.0, vt, start_on_upper(-5.35), eps=eps, n=n, t_end=1500.0)
 check("fixed-D simulation at psi = 20: perturbed upper state collapses just below the Hopf-type point (ln D = -5.50) and persists just above (ln D = -5.35)", below[1] < 1e-3 and above[0] > 0.9,
       "alpha ranges %s and %s" % (np.round(below, 4), np.round(above, 4)))
+w20 = T.bistable_window(eps, n, 20.0, vt)
+aH = w20["alpha_ext"]
+h = 1e-6
+dtr = (T.trace_det(aH + h, eps, n, 20.0, vt)[0] - T.trace_det(aH - h, eps, n, 20.0, vt)[0]) / (2 * h)
+dlnD = (np.log(T.g_curve(aH + h, eps, n, T.kappa(20.0, vt))) - np.log(T.g_curve(aH - h, eps, n, T.kappa(20.0, vt)))) / (2 * h)
+evH = np.linalg.eigvals(T.jacobian(aH, eps, n, 20.0, vt))
+check("Hopf-type point (psi = 20): purely imaginary pair +/- i omega with omega = sqrt(det), and nonzero transversality d Re(lambda)/d ln D", np.max(np.abs(evH.real)) < 1e-6 and abs(abs(evH.imag[0]) - np.sqrt(T.trace_det(aH, eps, n, 20.0, vt)[1])) < 1e-6 and abs(0.5 * dtr / dlnD) > 1.0,
+      "omega = %.3f, transversality %.2f" % (abs(evH.imag[0]), 0.5 * dtr / dlnD))
+al_a, T_a, Tinf_a = N.arr_flow_curve(3.0, 1.0, 220.0, N=400)
+i_ = 150
+resid = (N._k1(T_a[i_]) + N._k2(T_a[i_]) * al_a[i_]) * (1 - al_a[i_]) ** 1.5 - al_a[i_] / 3.0
+check("Arrhenius flow reactor: parametrized steady states satisfy the conversion balance", abs(resid) < 1e-8, "residual %.1e" % resid)
+an_ = N.arr_flow_analysis(3.0, 1.0, 220.0, N=1500)
+check("Arrhenius temperature path (dT_ad = 220 K, tau_res = tau_th = 3 min): a window of two stable states exists between about 128 and 152 C", an_["bistable"] and 120 < an_["window"]["T_ext"] < 135 and 148 < an_["window"]["T_ign"] < 156,
+      "window %.2f to %.2f C" % (an_["window"]["T_ext"], an_["window"]["T_ign"]))
 A_lo = T.attractor_loop_area(eps, n, 3.0, vt)[0]
 A_hi, w = T.attractor_loop_area(eps, n, 20.0, vt)
 check("attractor loop area is zero below kappa_c, positive above, and smaller than the fold-to-fold multiplicity area at psi = 20", A_lo == 0.0 and 0 < A_hi < T.static_loop_area(eps, n, T.kappa(20.0, vt))[0], "areas %.3f and %.3f" % (A_hi, T.static_loop_area(eps, n, T.kappa(20.0, vt))[0]))

@@ -22,8 +22,8 @@ code/theory.py          the closed forms (pure functions)
 code/core.py            reference model: vectorised RK4 of the T-C-alpha system with a capsule population
 code/numerics.py        adaptive stiff integrations for the criticality and flow-reactor results
 code/run_all.py         every result table -> results.json (about 6 minutes)
-code/figures.py         Figures 1-5
-code/test_theory.py     38 checks of the closed forms against the numerics (about 2 minutes)
+code/figures.py         Figures 1-5 (and figures_extra.py: Figure 6, Arrhenius temperature path and noise dependence of the exit)
+code/test_theory.py     41 checks of the closed forms, the stability analysis and the temperature path against the numerics (about 2 minutes)
 refs/build_refs.py      every journal reference harvested from Crossref
 manuscript/             builder (reads results.json) and the manuscript
 tools/                  Zenodo reservation/publication scripts (token from ZENODO_TOKEN, never stored)
@@ -36,6 +36,7 @@ pip install -r requirements.txt
 python code/test_theory.py
 python code/run_all.py
 python code/figures.py
+python code/figures_extra.py
 cd manuscript && python build_manuscript.py && python build_manuscript.py
 ```
 

@@ -9,3 +9,15 @@
 | 5. Submission files | AI declaration names the tool, version, manufacturer, purpose and how outputs were generated and checked (Section II C). Cover letter rewritten (exact / closed-form-with-approximations / numerical; concrete new result; precise overlap disclosure). Abstract 233 words. PDF with embedded fonts; vector PDF copies of the figures; figure alt text. Tests: 38 checks. |
 
 Things the review asked for that remain open: a real-data comparison; the unstable cycle at the Hopf-type point; a closed-form finite-Theta correction.
+
+
+## v1.2.0: second review (two further assessments, 7 October 2026)
+
+| Item | What was done |
+|---|---|
+| Temperature-sweep interpretation (III E) | The claimed physical equivalence of a ln D sweep with a temperature sweep is removed, and so is the 112.3 K window: the ln D sweep is a parameter sweep at fixed (psi, vartheta). A physical Arrhenius temperature path (psi, epsilon, D all vary) is now simulated: for dT_ad = 220 K, tau_res = tau_th = 3 min the window of two stable states is 24.2 K (127.89-152.09 C, upper branch lost at a Hopf-type point); 9.4 K for 160 K and 2.1 K for 120 K. The fixed-psi estimate (26.6, 11.2, 2.7 K) is shown to be only indicative. |
+| Hysteresis convergence claim | Qualified. For psi = 20 the power-law fit gives 5.119 against the attractor loop area 5.047; convergence to 5.047 is NOT confirmed. New study: the exit from the unstable upper branch depends on integrator tolerance (ln D = -5.575, -5.533, -5.502, -5.508 for rtol 1e-6 ... 1e-12) and not on the turning point, i.e. it is noise controlled; sweep loops lie between the attractor loop area and the fold-to-fold area (5.236). Slow-passage analysis left open. |
+| Hopf boundary verification | omega = 3.784 (det 14.3), transversality dRe(lambda)/dlnD = -12.25, eigenvalue types along the branch (node, focus, stable focus, stable node); basin radius of the upper state scales as distance^0.57, indicating a subcritical Hopf bifurcation (numerical evidence; no Lyapunov coefficient). |
+| Novelty comparison | Table 1: what follows from established theory (generalized time, Semenov/Frank-Kamenetskii, consumption, induction period, CSTR stability) and what is specific to the melt-gated system. |
+| Reproducibility and package | 41 checks. A clean clone of the release tag was tested and results.json regenerated (see the release notes). Manuscript PDF and cover-letter PDF are in the package; all 22 pages were inspected. |
+| AI identification | The session's own environment reports the model as Sonnet 5.5, identifier claude-sonnet-5-5, used through the Claude Code environment of the Claude desktop application; the manuscript now says so. The author should confirm this from their own account. |

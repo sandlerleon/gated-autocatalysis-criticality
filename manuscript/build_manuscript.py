@@ -22,8 +22,8 @@ os.makedirs(OUT, exist_ok=True)
 R = json.load(open(os.path.join(ROOT, "results.json"), encoding="utf-8"))
 REFS = json.load(open(os.path.join(ROOT, "refs", "refs_cache.json"), encoding="utf-8"))
 ZEN = json.load(open(os.path.join("C:" + os.sep, "YouTube", "_gac_zenodo_state.json")))
-SW_DOI, PP_DOI = (ZEN.get("software_1.1.0") or ZEN["software"])["doi"], (ZEN.get("publication_v2") or ZEN["publication"])["doi"]
-RELEASE = os.environ.get("RELEASE_TAG", "v1.1.0")
+SW_DOI, PP_DOI = (ZEN.get("software_1.2.0") or ZEN.get("software_1.1.0") or ZEN["software"])["doi"], (ZEN.get("publication_v3") or ZEN.get("publication_v2") or ZEN["publication"])["doi"]
+RELEASE = os.environ.get("RELEASE_TAG", "v1.2.0")
 REPO = "https://github.com/sandlerleon/gated-autocatalysis-criticality"
 
 TITLE = "Closed-Form Storage Stability, Induction Delay, and Thermal-Feedback Criticality of Melt-Gated Autocatalytic Cure"
@@ -32,6 +32,8 @@ TITLE = "Closed-Form Storage Stability, Induction Delay, and Thermal-Feedback Cr
 n_ord = 1.5
 CL, DA, IA, IS, LK, DR, RC, RP = R["clock"], R["delay_vs_alpha"], R["incomplete_activation"], R["isothermal"], R["leakage"], R["design_rule"], R["recovery"], R["recovery_prior"]
 FK, AR, FL, CV = R["critical_fk"], R["critical_arrhenius"], R["flow"], R["convergence"]
+HP, HN, AF = R["hopf"], R["hopf_noise"], R["arrhenius_flow"]
+AFC = {c["dtad"]: c for c in AF["cases"]}
 clock_err = max(abs(r["clock"] - r["numeric"]) / r["numeric"] for r in CL)
 iso_err = max(max(abs(r["t10_th"] - r["t10_num"]) / r["t10_num"], abs(r["t90_th"] - r["t90_num"]) / r["t90_num"]) for r in IS)
 r140_1 = [r for r in IS if r["T"] == 140.0 and r["n"] == 1.0][0]
@@ -186,7 +188,7 @@ ABS = ("A cure triggered by the melting of an encapsulated catalyst combines a d
        "(iv) The frozen-conversion thermal balance has an algebraic branch only for Π = ψΘ below Π_c = (1+n)^(1+n)/[e n^n (1+ε)^(1+n)] (%s for n = 3/2); "
        "integrated thresholds approach it as Θ → 0 and, with Arrhenius kinetics, exceed it by about exp(1/Ar) (within %s %% on the tested grid). "
        "(v) In a continuous-flow reactor the steady-state curve has two folds above κ_c = %s, but the upper branch can lose stability at a Hopf-type point before its fold; "
-       "the window of two stable states and its loop area are computed, and finite-rate loops approach it slowly. All parameters are illustrative; no experimental data are used."
+       "the window of two stable states is computed, also on an Arrhenius temperature path, while sweep loops through that point depend on noise and are not shown to converge to its loop area. All parameters are illustrative; no experimental data are used."
        % (pct(max(dr_dev), 0), f2(PICE[1.5]), pct(max(ar_dev), 0), f2(KC)))
 H.para(doc, ABS, align="justify")
 NUM["absw"] = len(ABS.split())
@@ -216,10 +218,18 @@ P("The paper separates standard identities from results specific to this system.
   "Kamal–Sourour consumption law, which gives a closed-form critical number, its overshoot below the fold and an Arrhenius correction (III D); the classical treatment of consumption "
   "[[adler1964]] is not specific to autocatalysis. Proposition 5 gives the steady states, the Jacobian and the stable window of a continuous-flow reactor with this kinetics (III E). A synthetic-data "
   "test shows how the closed forms behave as fitting functions (III F). To the author's knowledge, in the sources examined, these results have not been assembled for a gated autocatalytic cure.")
-P("The illustrative parameter set and the capsule-population picture were introduced in a numerical study by the author [[sandler2026]]: the rate constants and orders of Table 1, the "
+P("The illustrative parameter set and the capsule-population picture were introduced in a numerical study by the author [[sandler2026]]: the rate constants and orders of @T:par@, the "
   "release rate constant, the logistic activation and the mean melting temperature, the adiabatic rise, and the reference integrator come from that study. The analytic results below are new, "
   "and the comparisons of that study with first-order controls are not used here. The model is lumped and every parameter is illustrative: nothing is fitted to measurements, and the paper "
   "makes no claim about a particular material.")
+
+rows = [["Result", "Established antecedent", "Specific to the melt-gated autocatalytic system"],
+        ["Availability clock and delay (Prop. 1)", "Generalized-time (time-change) identity of separable kinetics [[ozawa1965]]", "Identification of the clock with the integrated catalyst availability; the conversion-dependent delay τ_{rel}[1 − exp(−t/τ_{rel})]; the clock for incomplete activation"],
+        ["Cure time and sharpness (Prop. 2)", "Integrals of the Kamal–Sourour law [[kamal1973,sourour1976]]", "Exact n = 1 sharpness and its logarithmic asymptotic law (an elementary consequence)"],
+        ["Storage conversion and spread bound (Prop. 3)", "Gaussian tail and probit approximation; linear response with an integrating factor", "Closed-form storage conversion of a capsule population with release lag, and its exact inversion into a bound on the melting-temperature spread"],
+        ["Critical number (Prop. 4)", "Semenov and Frank-Kamenetskii fold [[semenov1928,frankkamenetskii1969]]; reactant consumption [[adler1964]]; induction period [[kassoy1980]]", "Closed-form maximum rate of the Kamal–Sourour law with an induction term, hence the finite-ε critical number; the frozen-fold Arrhenius factor; operational thresholds"],
+        ["Flow reactor (Prop. 5)", "Multiplicity and stability of stirred reactors [[vanheerden1953,aris1958,uppal1974]]", "Closed-form equilibrium-multiplicity threshold κ_{c} for this kinetics; Jacobian and Hopf-type stable window; a temperature-path simulation with Arrhenius kinetics"]]
+TAB(rows, "Provenance of the results: what follows from established theory and what is specific to this system (to the author's knowledge, in the sources examined).", widths=[1.5, 2.4, 2.9], size=8, label="prov")
 
 # ================================================================== II Model
 HD("II. Model and scaling")
@@ -258,7 +268,7 @@ P("The *exponential comparison model* used in Sections III D and III E replaces 
 HD("C. Computation and use of AI assistance", 2)
 P("All numerical results are produced by the released scripts (run_all.py writes results.json; every number in the text is read from it, none is typed by hand), with the reference integrator, "
   "solver settings and protocols given in Appendix A. The model code, the closed-form module, the tests, the figure scripts and a first draft of the text were produced with the assistance of "
-  "Claude Sonnet 5.5 (model identifier claude-sonnet-5-5; Anthropic), used through the Claude Code command-line environment on the author's computer, because the author is an independent "
+  "Claude Sonnet 5.5 (model identifier claude-sonnet-5-5; Anthropic), used through the Claude Code environment of the Claude desktop application on the author's computer (the model identifier is the one reported by that environment), because the author is an independent "
   "researcher without a computational group. The assistant wrote and ran code, drafted derivations and checked algebra; closed forms were verified against independent numerical integration by the "
   "test suite (code/test_theory.py) and by the comparisons reported in Section III, and every journal reference was resolved through Crossref. The assistant did not enter or alter any numerical result "
   "by hand. The author is responsible for the content.")
@@ -381,9 +391,10 @@ FIG("fig3_criticality.png", "(a) Operational critical number against Θ for n = 
 HD("E. Proposition 5: continuous-flow reactor, steady states, stability, and hysteresis", 2)
 P("Let fresh resin of conversion 0 enter at the wall temperature with residence time τ_{res}, and let ϑ = τ_{th}/τ_{res} and D = k_{2}τ_{res}. In units of τ_{res} and in the exponential model,")
 EQ(FRAC(V("dα"), Tt("dt′")) + EQS + V("D") + V("r") + MINUS + V("α") + Tt(",   ") + FRAC(V("dθ"), Tt("dt′")) + EQS + V("D") + V("r") + MINUS + V("θ") + DEL(Tt("1") + PLUS + FRAC(Tt("1"), Tt("ϑ"))) + Tt(",   ") + V("r") + EQS + DEL(V("ε") + PLUS + V("α")) + SUPN(DEL(Tt("1") + MINUS + V("α")), V("n")) + SUPN(Tt("e"), Tt("ψθ")) + Tt("."), "eflow")
-P("*Control parameter.* D is swept with ϑ and ψ held fixed. Physically this is a sweep of the specimen temperature T_{∞} at fixed τ_{th} and τ_{res}: D and Θ are both proportional to k_{2}(T_{∞}), so ϑ is constant, "
-  "and in the exponential model a change of ln D by one unit corresponds to a temperature change of RT²/E_{2} = %.1f K at 140 °C. A sweep of the flow rate at fixed temperature changes τ_{res} and therefore ϑ; it "
-  "is a different parameter path and is not analyzed here." % KELVIN)
+P("*Control parameter.* In the exponential model D is varied at fixed ϑ and ψ. This is a mathematical parameter sweep, not by itself a physical temperature sweep: a change of the wall temperature also "
+  "changes ψ = ΔT_{ad}E_{2}/(RT_{∞}^{2}), ε = k_{1}/k_{2} and Ar. The ln D windows below are therefore windows in the parameter D, and no conversion of ln D into kelvin is claimed from them. A physical "
+  "temperature path with Arrhenius kinetics, in which ψ, ε and D all change with T_{∞}, is simulated separately at the end of this section. A sweep of the flow rate at fixed temperature changes τ_{res} "
+  "and therefore ϑ, which is a different parameter path and is not analyzed here.")
 P("**Proposition 5 (steady states).** The steady states satisfy θ = ϑα/(1 + ϑ) = κα/ψ and are given parametrically by")
 EQ(V("D") + EQS + FRAC(V("α"), DEL(V("ε") + PLUS + V("α")) + SUPN(DEL(Tt("1") + MINUS + V("α")), V("n")) + Tt("exp") + DEL(V("κα"))) + Tt(",   ") + V("κ") + EQS + FRAC(Tt("ψϑ"), Tt("1") + PLUS + Tt("ϑ")) + Tt("."), "ess")
 P("*Proof.* At steady state the conversion balance gives rD = α, and the heat balance gives θ(1 + 1/ϑ) = rD = α, so θ = ϑα/(1 + ϑ) = κα/ψ; substituting ψθ = κα into rD = α gives the expression. ∎ "
@@ -399,18 +410,18 @@ P("with trace q + ψα − 2 − 1/ϑ and determinant (1 + 1/ϑ)(1 − q) − ψ
   "ln D_{ext} is the upper fold when its trace is negative and ln D_{H} otherwise (@T:flowstab@)." % (
       FL["psi_hopf_replaces_fold"], STAB[20.0]["trace_upper_fold"], STAB[20.0]["alpha_fold_hi"], STAB[20.0]["lnD_fold_hi"], STAB[20.0]["window"]["alpha_ext"], STAB[20.0]["window"]["lnD_ext"],
       T.trace_det(STAB[20.0]["window"]["alpha_ext"], 3e-3, 1.5, 20.0, 1.0)[1]))
-rows = [["ψ", "κ", "Equilibria", "Trace at upper fold", "Upper stable from", "ln D window of two stable states", "Window width (K)", "Attractor loop area", "Fold-to-fold area"]]
+rows = [["ψ", "κ", "Equilibria", "Trace at upper fold", "Upper stable from", "ln D window of two stable states", "Attractor loop area", "Fold-to-fold area"]]
 for psi in (3.0, 4.5, 6.0, 8.0, 12.0, 20.0):
     s = STAB[psi]
     if not s["folds"]:
-        rows.append(["%.1f" % psi, f2(s["kappa"]), "1 (κ < κ_{c})", "–", "–", "–", "–", "0", "0"])
+        rows.append(["%.1f" % psi, f2(s["kappa"]), "1 (κ < κ_{c})", "–", "–", "–", "0", "0"])
         continue
     w = s["window"]
-    rows.append(["%.1f" % psi, f2(s["kappa"]), "3", "%+.2f" % s["trace_upper_fold"], "%s, α = %.3f" % (w["kind"], w["alpha_ext"]), "%.3f to %.3f" % (w["lnD_ext"], w["lnD_ign"]), f1((w["lnD_ign"] - w["lnD_ext"]) * KELVIN),
+    rows.append(["%.1f" % psi, f2(s["kappa"]), "3", "%+.2f" % s["trace_upper_fold"], "%s, α = %.3f" % (w["kind"], w["alpha_ext"]), "%.3f to %.3f" % (w["lnD_ext"], w["lnD_ign"]),
                  f3(s["attractor_area"]), f3(s["multiplicity_area"])])
-TAB(rows, "Steady states and stability of the continuous-flow reactor (ϑ = 1, n = 3/2, ε = 3 × 10^{−3}, κ_{c} = %.3f). The upper branch is stable from the upper fold ('fold') or from the Hopf-type point ('hopf'); the window width "
-          "is the temperature interval RT²/E_{2}(ln D_{ign} − ln D_{ext}) at 140 °C; the attractor loop area is ∫(α_{upper} − α_{lower}) d ln D over the window of two stable states, and the fold-to-fold area uses the full "
-          "multiplicity interval." % KC, widths=[0.4, 0.5, 0.9, 0.8, 1.0, 1.2, 0.7, 0.8, 0.8], size=7.5, label="flowstab")
+TAB(rows, "Steady states and stability of the continuous-flow reactor (ϑ = 1, n = 3/2, ε = 3 × 10^{−3}, κ_{c} = %.3f). The upper branch is stable from the upper fold ('fold') or from the Hopf-type point ('hopf'); the "
+          "attractor loop area is ∫(α_{upper} − α_{lower}) d ln D over the window of two stable states, and the fold-to-fold area uses the full "
+          "multiplicity interval." % KC, widths=[0.4, 0.5, 0.9, 0.8, 1.1, 1.3, 0.9, 0.9], size=7.5, label="flowstab")
 assert all(s["trace_lower_fold"] < 0 for s in FL["stability"] if s["folds"]), "lower fold is not always a saddle-node"
 att20 = [a for a in FL["attractors"] if a["psi"] == 20.0]
 att45 = [a for a in FL["attractors"] if a["psi"] == 4.5]
@@ -420,18 +431,33 @@ P("*Verification by attractors.* We integrated Eq. (@eflow@) at fixed D from the
   "so the loss of stability at the Hopf-type point is, in these simulations, abrupt (subcritical-like), not a transition to a stable cycle; the unstable cycle, if any, was not computed." % (
       sum(1 for a in att45 if a["in_window"] and len(a["attractors"]) >= 2), sum(1 for a in att45 if a["in_window"]), sum(1 for a in att20 if a["in_window"] and len(a["attractors"]) >= 2), sum(1 for a in att20 if a["in_window"]),
       max(a["max_oscillation"] for a in FL["attractors"])))
+P("*The Hopf-type point (ψ = 20).* At α_{H} = %.4f (ln D_{H} = %.3f) the Jacobian has a purely imaginary pair ±iω with ω = %.3f (period %.2f residence times) and determinant %.1f > 0; the real part of the pair has "
+  "nonzero speed, dRe λ/d ln D = %.2f (transversality), so the eigenvalues cross the imaginary axis. Along the upper branch the eigenvalues are real at the fold (0 and %.2f), an unstable node, then an unstable focus, "
+  "then a stable focus above ln D_{H} and a stable node far above. Whether the bifurcation is sub- or supercritical was probed numerically by the radius of the basin of the upper state: the smallest perturbation in θ that "
+  "sends the trajectory to the lower state is %.4f at ln D = ln D_{H} + 0.01 and varies as the distance from the Hopf-type point to the power %.2f (prefactor %.3f), so an unstable cycle that shrinks onto the equilibrium at "
+  "ln D_{H} is indicated, i.e. a subcritical bifurcation. This is numerical evidence, not a proof: the first Lyapunov coefficient and the cycle itself were not computed." % (
+      HP["alpha_H"], HP["lnD_H"], HP["omega"], HP["period"], T.trace_det(HP["alpha_H"], 3e-3, 1.5, 20.0, 1.0)[1], HP["transversality"], HP["eigenvalues"][0]["eig_re"][1], HP["basin_radius"][0]["radius_theta"],
+      HP["radius_exponent"], HP["radius_prefactor"]))
+c20, c45, c8, c3 = CASE[20.0], CASE[4.5], CASE[8.0], CASE[3.0]
 OUTSIDE_SINGLE = all(len(a["attractors"]) == 1 for a in FL["attractors"] if not a["in_window"])
 INSIDE_DOUBLE = all(len(a["attractors"]) == 2 for a in FL["attractors"] if a["in_window"])
 print("attractor scan: outside single", OUTSIDE_SINGLE, "inside two", INSIDE_DOUBLE)
-c20, c45, c8, c3 = CASE[20.0], CASE[4.5], CASE[8.0], CASE[3.0]
-P("*Verification by sweeps.* We swept ln D up and down at rates v = 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005 and 0.0002 per residence time (protocol in Appendix A: start at the unreacted state, dwell 20 residence times at each turning point, "
-  "sweep bounds ±2 in ln D beyond the window). The loop area decreases monotonically with v but converges slowly. For ψ = 20 it falls from %.3f to %.3f against the attractor loop area %.3f of @T:flowstab@; a fit "
-  "A(v) = A_{0} + cv^{p} to the seven rates gives A_{0} = %.3f with p = %.2f, which a two-point linear intercept would not capture. The downward switching of the sweeps occurs "
-  "at ln D = %.2f (v = 0.0002), between the Hopf-type point (%.2f) and the fold (%.2f), because the loss of stability near a Hopf-type point is delayed at finite rate. For ψ = 4.5, just above κ_{c}, "
-  "the attractor loop area is %.3f and the integrated area at v = 0.0002 is %.3f (fit A_{0} = %.3f, p = %.2f); for ψ = 8 the attractor loop area is %.3f, the integrated area at v = 0.0002 is %.3f and the fit gives %.3f; for ψ = 3 (κ = %.2f < κ_{c}) there is no static loop and the area at v = 0.0002 "
-  "is %.3f (fit %.3f). A finite-rate loop therefore exists below the threshold as well, and only the convergence with v distinguishes a static loop from a rate-dependent one (@T:flow@)." % (
-      c20["sweeps"][0]["area"], c20["sweeps"][-1]["area"], c20["attractor_area"], c20["fit_A0"], c20["fit_p"], c20["sweeps"][-1]["lnD_down"], c20["window"]["lnD_ext"], np.log(c20["window"]["D_fold_hi"]),
-      c45["attractor_area"], c45["sweeps"][-1]["area"], c45["fit_A0"], c45["fit_p"], c8["attractor_area"], c8["sweeps"][-1]["area"], c8["fit_A0"], c3["kappa"], c3["sweeps"][-1]["area"], c3["fit_A0"]))
+nzs = HN["by_tolerance"]
+P("*Sweeps.* We swept ln D up and down at rates v = 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005 and 0.0002 per residence time (protocol in Appendix A: start at the unreacted state, dwell 20 residence times at each turning "
+  "point, sweep bounds ±2 in ln D beyond the window). For ψ = 4.5, where the upper fold is a saddle-node, the sweep area decreases toward the attractor loop area (%.3f; integrated %.3f at v = 0.0002; fit A_{0} = %.3f, "
+  "p = %.2f). For ψ = 3 (κ = %.2f < κ_{c}) there is no static loop and the area at v = 0.0002 is %.3f. A finite-rate loop exists below the threshold as well, so only convergence with v distinguishes a static loop from "
+  "a rate-dependent one (@T:flow@). **For ψ = 8 and 20, where the upper branch loses stability at the Hopf-type point, convergence of the sweep area to the attractor loop area is not confirmed.** For ψ = 20 the integrated area "
+  "falls from %.3f to %.3f over the rates and a power-law fit A(v) = A_{0} + cv^{p} gives A_{0} = %.3f (p = %.2f), above the attractor loop area %.3f; for ψ = 8 the attractor loop area is %.3f, the integrated area at "
+  "v = 0.0002 is %.3f and the fit gives %.3f." % (c45["attractor_area"], c45["sweeps"][-1]["area"], c45["fit_A0"], c45["fit_p"], c3["kappa"], c3["sweeps"][-1]["area"], c20["sweeps"][0]["area"], c20["sweeps"][-1]["area"],
+                                                    c20["fit_A0"], c20["fit_p"], c20["attractor_area"], c8["attractor_area"], c8["sweeps"][-1]["area"], c8["fit_A0"]))
+P("*Why the Hopf-type case is not simply a slow limit.* The downward switching of the sweeps at ψ = 20 occurs between the Hopf-type point (ln D = %.2f) and the upper fold (%.2f), where the unstable upper "
+  "equilibrium still exists. In a noise-free system a trajectory that follows the stable branch would stay on the unstable equilibrium until it disappears at the fold, and the loop would extend to the fold-to-fold area (%.3f); "
+  "in a real or numerical system, perturbations of size set by the noise grow and the exit occurs earlier. The simulations show exactly this dependence: at v = 0.001 the switching value of ln D is %.3f, %.3f, %.3f and %.3f "
+  "for integrator tolerances (rtol) of 10^{−6}, 10^{−8}, 10^{−10} and 10^{−12}, with areas %.3f, %.3f, %.3f and %.3f, while it does not depend on the turning point of the sweep (ln D_{ign} + 0.5 to + 3: %.3f to %.3f). "
+  "At the slower rates (v ≤ 0.002) the sweep loop through a Hopf-type point lies between the attractor loop area (%.3f) and the fold-to-fold area (%.3f), and its limit at vanishing sweep rate depends on the noise level; whether it tends to "
+  "the attractor loop area as the noise-limited exit approaches the Hopf-type point requires a slow-passage analysis that is not attempted here." % (
+      HN["lnD_hopf"], HN["lnD_upper_fold"], HN["multiplicity_area"], *[d["lnD_down"] for d in nzs], *[d["area"] for d in nzs], min(d["lnD_down"] for d in HN["by_turning_point"]), max(d["lnD_down"] for d in HN["by_turning_point"]),
+      HN["attractor_area"], HN["multiplicity_area"]))
 rows = [["ψ", "κ", "Attractor loop area", "Fold-to-fold area", "v = 0.02", "0.01", "0.005", "0.002", "0.001", "0.0005", "0.0002", "Fit A_{0} (p)"]]
 for psi in (3.0, 4.5, 8.0, 20.0):
     c = CASE[psi]
@@ -441,11 +467,32 @@ TAB(rows, "Integrated hysteresis-loop area ∮α d ln D of the sweeps at seven s
 FIG("fig4_flow_reactor.png", "(a) Steady-state curve of the flow reactor at ψ = 20 (κ = 10) with stable (solid) and unstable (dashed) segments, the two folds (squares) and the Hopf-type point (circle). (b) Sweep loops "
     "at two rates against the steady states. (c) Loop area against sweep rate, the power-law fit, and the attractor loop area.", "Three panels. (a) Steady conversion against ln D with solid stable and dashed unstable parts and marked fold and Hopf points. (b) Up and down sweep loops. (c) Loop area against sweep rate approaching the attractor loop area.", width=6.7)
 
+P("*Physical temperature path with Arrhenius kinetics.* To avoid the fixed-ψ approximation, the continuous-flow reactor was also simulated with both k_{1}(T) and k_{2}(T) Arrhenius (@T:par@), τ_{res} = τ_{th} = %.0f min "
+  "(ϑ = 1), n = 3/2 and a wall temperature T_{∞} that is varied, so that ψ, ε and D change along the path. The steady states are obtained exactly (conversion balance solved for T at given α, T_{∞} = T − ΔT_{ad}ϑα/(1 + ϑ)) "
+  "and their stability from the numerical Jacobian (@T:arrflow@). For ΔT_{ad} = 220 K the ignition fold is at T_{∞} = %.2f °C and the upper branch is stable from T_{∞} = %.2f °C (a Hopf-type point, %.2f K above the upper fold at %.2f °C), "
+  "giving a window of two stable states of %.1f K; the local ψ is %.1f at the ignition fold and %.1f at the upper fold. For ΔT_{ad} = 160 K the window is %.1f K (upper fold stable) and for 120 K it is %.1f K. "
+  "The fixed-ψ exponential-model estimate evaluated with the local ψ and ε at the ignition fold gives %.1f, %.1f and %.1f K for ΔT_{ad} = 220, 160 and 120 K: of the right order but not equal to the simulated widths, which "
+  "is why the physical path is simulated rather than inferred. Temperature ramps at %s K per residence time give loop areas ∮α dT_{∞} of %s K at ΔT_{ad} = 220 K, decreasing with the ramp rate; as in the "
+  "exponential model, the approach to a static limit is slow and is not claimed." % (
+      AF["tau_res"], AFC[220.0]["analysis"]["fold_lower"]["Tinf"], AFC[220.0]["analysis"]["window"]["T_ext"], AFC[220.0]["analysis"]["window"]["T_ext"] - AFC[220.0]["analysis"]["fold_upper"]["Tinf"], AFC[220.0]["analysis"]["fold_upper"]["Tinf"],
+      AFC[220.0]["analysis"]["window"]["width_K"], AFC[220.0]["analysis"]["fold_lower"]["psi"], AFC[220.0]["analysis"]["fold_upper"]["psi"], AFC[160.0]["analysis"]["window"]["width_K"], AFC[120.0]["analysis"]["window"]["width_K"],
+      AFC[220.0]["fk_estimate_width_K"] or 0.0, AFC[160.0]["fk_estimate_width_K"] or 0.0, AFC[120.0]["fk_estimate_width_K"] or 0.0, ", ".join("%g" % x["rate"] for x in AFC[220.0]["sweeps"]), ", ".join("%.1f" % x["area"] for x in AFC[220.0]["sweeps"])))
+rows = [["ΔT_{ad} (K)", "T_{∞} at ignition fold (°C)", "ψ, ε at that fold", "T_{∞} at upper fold (°C)", "Upper branch stable from (°C)", "How", "Window (K)", "Fixed-ψ estimate (K)"]]
+for dtad in (120.0, 160.0, 220.0):
+    an = AFC[dtad]["analysis"]
+    wv = an["window"]
+    rows.append(["%.0f" % dtad, f2(an["fold_lower"]["Tinf"]), "%.2f, %.4f" % (an["fold_lower"]["psi"], an["fold_lower"]["eps"]), f2(an["fold_upper"]["Tinf"]), f2(wv["T_ext"]), wv["kind"], f1(wv["width_K"]), f1(AFC[dtad]["fk_estimate_width_K"] or 0.0)])
+TAB(rows, "Window of two stable states on a physical temperature path with Arrhenius kinetics (τ_{res} = τ_{th} = 3 min, n = 3/2): steady states exact, stability from the numerical Jacobian; the last column is the "
+          "fixed-ψ exponential-model estimate at the local ψ and ε of the ignition fold, for comparison.", widths=[0.6, 0.9, 0.9, 0.9, 1.0, 0.5, 0.7, 0.9], size=7.5, label="arrflow")
+FIG("fig6_arrhenius_path.png", "(a) Steady states (solid: stable; dashed: unstable) and temperature ramps on the Arrhenius path (ΔT_{ad} = 220 K, τ_{res} = τ_{th} = 3 min); the dash-dot lines mark the stable window. "
+    "(b) Value of ln D at which the sweep of the exponential model (ψ = 20, v = 0.001) leaves the upper branch, against the integrator tolerance, between the Hopf-type point and the upper fold.",
+    "Two panels. (a) Conversion against wall temperature with stable and unstable steady states and up and down temperature ramps. (b) Extinction value of ln D against integrator tolerance lying between the Hopf-type point and the upper fold.", width=6.4)
+
 HD("F. Closed forms as fitting functions: a synthetic-data test", 2)
 P("With a known logistic width *w*_{0}, the storage curves depend on the capsule population only through the open fraction, i.e. through z = (T_{m} − T_{s})/σ_{eff} at each storage temperature, so the pair (T_{m}, σ) is "
   "determined only through the line z(T_{s}) = (T_{m} − T_{s})/σ_{eff}; an unknown *w*_{0} would add a third, confounded parameter. To see how well the pair can be recovered, synthetic isothermal storage curves were generated "
   "with the *population ODE* (not with the closed form) for σ = %.1f °C, T_{m} = %.0f °C and *w*_{0} = %.1f °C at three storage temperatures (%s °C) and five times (30–150 min), with Gaussian noise of %.3f in conversion, "
-  "and fitted by least squares with the closed form (known *w*_{0}; %d noise realizations). The estimates are σ̂ = %.1f ± %.1f °C and T̂_{m} = %.1f ± %.1f °C with a correlation of %.2f (Fig. 5): the two parameters are almost "
+  "and fitted by least squares with the closed form (known *w*_{0}; %d noise realizations). The estimates are σ̂ = %.1f ± %.1f °C and T̂_{m} = %.1f ± %.1f °C with a correlation of %.2f (Fig. 6): the two parameters are almost "
   "degenerate in this design, and σ̂ is biased high along the degenerate direction. An independent constraint on T_{m}, here a prior of %.1f °C (as from a calorimetric endotherm), markedly improved recovery in this tested design, "
   "to σ̂ = %.1f ± %.1f °C. Other temperatures, times or noise levels may also improve identifiability; no claim is made about real calorimetry." % (
       RC["true_sigma"], RC["true_Tm"], RC["w0"], ", ".join("%.0f" % t for t in RC["temps"]), RC["noise"], RC["n_trials"], RC["sigma_mean"], RC["sigma_sd"], RC["Tm_mean"], RC["Tm_sd"], RC["corr"], RP["Tm_prior_sd"], RP["sigma_mean"], RP["sigma_sd"]))
@@ -460,7 +507,8 @@ rows = [["Result", "Status", "Assumption it rests on", "Where it fails or is unt
         ["Critical number (Prop. 4)", "Frozen-conversion fold, closed form; operational thresholds numerical", "Exponential comparison model; ungated; Θ → 0", "Finite Θ shifts Π_{c} upward (computed only); whether the fold marks ignition of a finite batch is numerical; spatial gradients absent"],
         ["Arrhenius factor", "Frozen-fold factor (exact for one Arrhenius source); exp(1/Ar) first-order", "Single Arrhenius source for the fold", "Tested only for Ar = %.1f–%.1f and Θ ≤ 0.1; not tested at small Ar" % (Ar_lo, Ar_hi)],
         ["Flow reactor multiplicity (Prop. 5)", "Exact for the stated model", "Perfect mixing; exponential model; ungated; ϑ, ψ fixed", "Real reactors: finite mixing time, wall–fluid temperature difference"],
-        ["Flow reactor stability", "Jacobian exact; stable window computed; checked by simulation", "As above", "Loss of stability at the Hopf-type point studied for ψ = 20 only; unstable cycle not computed"],
+        ["Flow reactor stability", "Jacobian exact; stable window computed; checked by simulation; Hopf character numerical", "As above", "Hopf-type point studied for ψ = 20 only (subcritical bifurcation indicated numerically, no Lyapunov coefficient); convergence of sweep loops to the attractor loop area unconfirmed (noise dependent)"],
+        ["Temperature path (Arrhenius)", "Steady states exact; stability numerical", "τ_{res} = τ_{th} = 3 min, n = 3/2, ΔT_{ad} = 120, 160, 220 K", "Other τ, ϑ, ΔT_{ad} not scanned; sweeps not converged"],
         ["Parameter recovery (III F)", "Numerical experiment", "Gaussian noise; population ODE as truth; known *w*_{0}", "Not a test on real calorimetry"]]
 TAB(rows, "Status of the principal results, their assumptions, and where they fail or have not been tested. All parameters are illustrative.", widths=[1.5, 1.5, 1.8, 2.0], size=8, label="status")
 P("Three approximations carry the paper: the lumped, well-mixed energy balance; the exponential linearization of the Arrhenius law near the fold; and the Gaussian, independent-capsule description of the "
@@ -474,15 +522,15 @@ P("Each proposition predicts a measurement that a standard calorimetric or rheol
   "independently, for example by release assays), to collapse onto the ungated curve. (2) *Storage bound.* The melting endotherm gives T_{m} and σ; isothermal storage at a margin Δ for a time t should then give a conversion "
   "within a few tens of percent of Eq. (@eleak@); a systematically larger conversion would indicate a tail of capsules with low melting temperature that the Gaussian description misses. (3) *Critical thermal time constant.* "
   "At fixed T_{∞}, specimens of increasing thickness (τ_{th} grows as thickness squared) should show a rapid rise of the peak temperature rise at an operational threshold near Π_{c}/(ψk_{2}), with the Arrhenius "
-  "factor of Eq. (@earr@); the abruptness of the rise, from O(Θ) to O(ΔT_{ad}), is the signature of the fold. (4) *Static hysteresis.* In a continuously fed reactor with flow rate and wall time constant held fixed, a "
-  "temperature sweep (the path of Section III E) should give a loop whose area converges to a nonzero limit as the sweep slows when ψ is sufficiently above its threshold, and to zero when κ < κ_{c}; a loop that closes as the "
-  "sweep slows is rate dependent and not bistability. A sweep of the flow rate at fixed temperature is a different path (ϑ changes) and is not covered by the analysis.")
+  "factor of Eq. (@earr@); the abruptness of the rise, from O(Θ) to O(ΔT_{ad}), is the signature of the fold. (4) *Window of two stable states.* In a continuously fed reactor with flow rate and wall time constant held fixed, a slow ramp of the wall temperature up and down should show an ignition at the temperature of the lower fold and an extinction "
+  "at a lower temperature, with a window of the width computed for the actual (Arrhenius) path (Table @T:arrflow@; 24 K for the illustrative ΔT_{ad} = 220 K). The loop must be examined as the ramp slows; a loop that closes is "
+  "rate dependent and not bistability. Where the upper state is lost at a Hopf-type point the extinction temperature is expected to lie between the Hopf-type point and the upper fold and to depend on the noise level of the "
+  "experiment, so a single extinction temperature should not be predicted there. A sweep of the flow rate at fixed temperature is a different path (ϑ changes) and is not covered by the analysis.")
 
-# ================================================================== VI open problems
 HD("VI. Open problems")
 P("(a) *Spatial extension.* The lumped balance replaces the classical slab, cylinder or sphere. The critical Frank-Kamenetskii parameter of a consuming, autocatalytic source in a spatially resolved specimen, and its "
-  "relation to Π_{c} above, are open. (b) *Finite-Θ correction.* The upward shift of Π_{c} with Θ is computed numerically; a closed-form first correction would complete Proposition 4. (c) *Nature of the Hopf-type point.* "
-  "Whether the loss of stability of the upper branch of the flow reactor is sub- or supercritical in general, and the unstable cycle that mediates it, were studied only for ψ = 20. (d) *Non-Gaussian populations.* Proposition 3 "
+  "relation to Π_{c} above, are open. (b) *Finite-Θ correction.* The upward shift of Π_{c} with Θ is computed numerically; a closed-form first correction would complete Proposition 4. (c) *Hopf-type point and slow passage.* "
+  "The first Lyapunov coefficient, the unstable cycle, and an analysis of the slow passage (noise-limited delay) that would predict the limit of the sweep loops were not attempted; the sub- or supercritical character was probed only for ψ = 20. (d) *Non-Gaussian populations.* Proposition 3 "
   "needs only the lower tail of the melting-temperature distribution; skewed and bimodal distributions, and capsule–capsule heat exchange, are untested. (e) *Diffusion control and vitrification.* These stop the cure before "
   "completion and change the late-time tail of Proposition 2. (f) *Noise.* In small specimens or flow channels the fold may be crossed by fluctuations. (g) *Experiment.* The propositions are untested on a real encapsulated "
   "system; the signatures of Section V are the proposed tests.")
@@ -493,7 +541,7 @@ P("For the lumped model of a melt-gated autocatalytic cure, several statements c
   "the delay of a fully open population is τ_{rel}[1 − exp(−t/τ_{rel})] (Proposition 1). The isothermal cure time is exact by quadrature, and the n = 1 sharpness is a logarithm of the rate-constant ratio (Proposition 2). The storage "
   "conversion of a Gaussian capsule population is (a/b)[exp(b f t_{eff}) − 1], which inverts into a bound on the melting-temperature spread (Proposition 3). The frozen-conversion thermal balance has a critical number "
   "(1+n)^{1+n}/[e n^{n}(1+ε)^{1+n}], with an Arrhenius correction that is close to exp(1/Ar) in the tested grid (Proposition 4). The continuous-flow reactor has three equilibria above κ_{c}, but the upper branch can lose stability "
-  "at a Hopf-type point before its fold, so the hysteresis window and its loop area must be computed from the stable states (Proposition 5). All results are tested against the full equations; none is tested against "
+  "at a Hopf-type point before its fold, so the hysteresis window and its loop area must be computed from the stable states, and sweep loops through that point depend on noise (Proposition 5). All results are tested against the full equations; none is tested against "
   "experiment, and the parameters are illustrative.")
 
 HD("Declarations")
@@ -512,7 +560,8 @@ P("*Reference integrator.* Eqs. (@e1@)–(@e3@) are integrated for all scenarios
 P("*Adaptive integrations.* The exponential-model criticality problem is integrated with LSODA (rtol 10^{−9}, atol 10^{−13}, max step 0.02, end time 40/k_{2}); the Arrhenius criticality problem with LSODA (rtol 10^{−8}, atol 10^{−12}, "
   "end time 60/k_{2}, temperature floored at 200 K in the rate); the flow reactor with LSODA (rtol 10^{−8}, atol 10^{−12}, max step min(0.5, 0.02/v)); fixed-D attractor runs with LSODA (rtol 10^{−11}, atol 10^{−14}, end time 3000 "
   "residence times; the last 10 % is used to classify the state); constant-temperature delay checks with RK45 (rtol 10^{−12}).")
-P("*Thresholds.* The operational critical number is the Π (exponential model, bracket [0.3, 8], 30 bisection steps) or the adiabatic rise (Arrhenius model, bracket [3, 8000] K in logarithm, 26 steps) at which the integrated "
+P("*Noise and temperature-path studies.* The tolerance study uses LSODA with (rtol, atol) = (10^{−6}, 10^{−9}), (10^{−8}, 10^{−12}), (10^{−10}, 10^{−14}) and (10^{−12}, 10^{−16}) at v = 0.001; the basin radius is bisected (26 steps, bracket [10^{−6}, 0.5]) in the direction of −θ with end time 2500 residence times. The Arrhenius temperature path uses 4000 conversion points for the steady curve (brentq xtol 10^{−10} in T), a central-difference Jacobian, and LSODA ramps (rtol 10^{−8}, atol 10^{−10}, dwell 20 residence times, bounds from 15 K below the window to 15 K above it). "
+  "*Thresholds.* The operational critical number is the Π (exponential model, bracket [0.3, 8], 30 bisection steps) or the adiabatic rise (Arrhenius model, bracket [3, 8000] K in logarithm, 26 steps) at which the integrated "
   "peak temperature rise (T_{max} − T_{∞})/ΔT_{ad} first exceeds 0.3, starting from T(0) = T_{∞}. *Sweeps.* Start at (θ, α) = (0, 0) at the lower bound of ln D (window lower edge minus 2), dwell 20 residence times, sweep up at rate v to the upper "
   "bound (window upper edge plus 2), dwell 20, sweep down, dwell 20; the area is the signed integral of α d ln D over the two sweep legs (output step 0.05). *Design bound.* σ^{*} from Eq. (@esigma@) with *w*_{0} = 0.5 °C; the ODE root "
   "is bracketed in [0.3, 40] °C (xtol 10^{−3}). *Recovery.* 200 noise realizations (seed 20261007, prior test seed 20261008), bounded least squares. *Errors.* In every table, difference = closed form (or prediction)/numerical − 1. "
@@ -533,7 +582,9 @@ rows = [["Study", "Method", "Grid", "Compared with"],
         ["Design bound", "Root-finding on the population ODE", "Δ = 3, 6, 10 °C; η = 0.001, 0.01, 0.05", "Eq. (@esigma@)"],
         ["Criticality (exponential model)", "LSODA, bisection", "n = 1, 3/2, 2; Θ = 0.1–0.003", "Eq. (@ePic@)"],
         ["Criticality (Arrhenius)", "LSODA, bisection", "T = 120, 140, 160 °C; Θ = 0.01–0.1", "Eq. (@earr@)"],
-        ["Flow reactor", "Jacobian; LSODA attractors and sweeps", "ψ = 3, 4.5, 6, 8, 12, 20; v = 0.02–0.001", "Eqs. (@ess@), (@eJ@), attractor loop area"],
+        ["Flow reactor", "Jacobian; LSODA attractors and sweeps", "ψ = 3, 4.5, 6, 8, 12, 20; v = 0.02–0.0002", "Eqs. (@ess@), (@eJ@), attractor loop area"],
+        ["Hopf-type point and noise", "Eigenvalues, basin radius, tolerance study", "ψ = 20; ln D_{H} + 0.01 to + 0.95; rtol 10^{−6}–10^{−12}", "Transversality, ω, attractor and fold-to-fold areas"],
+        ["Arrhenius temperature path", "Exact steady states, Jacobian, LSODA ramps", "ΔT_{ad} = 120, 160, 220 K; ramps 2–0.02 K per τ_{res}", "Table @T:arrflow@"],
         ["Parameter recovery", "Bounded least squares, 200 noise draws", "3 temperatures × 5 times", "Truth"]]
 TAB(rows, "Run table of the numerical studies; every result is reproduced by code/run_all.py.", widths=[1.5, 2.1, 2.0, 1.4], size=8, label="runs")
 

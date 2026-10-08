@@ -300,5 +300,62 @@ for psi in (3.0, 4.5, 8.0, 20.0):
 res5["cases"] = cases
 RES["flow"] = res5
 
+# ---- Hopf-type point of the exponential-model flow reactor at psi = 20: frequency, transversality, eigenvalue types, basin radius
+psi = 20.0
+kap = T.kappa(psi, vt)
+w20 = T.bistable_window(eps, n, psi, vt)
+aH, lnDH = w20["alpha_ext"], w20["lnD_ext"]
+tr_f = lambda x: T.trace_det(x, eps, n, psi, vt)[0]
+hh = 1e-6
+dtr = (tr_f(aH + hh) - tr_f(aH - hh)) / (2 * hh)
+dlnD = (np.log(T.g_curve(aH + hh, eps, n, kap)) - np.log(T.g_curve(aH - hh, eps, n, kap))) / (2 * hh)
+eig_types = []
+for a_ in (0.85, 0.88, 0.90, aH, 0.93, 0.97):
+    ev = np.linalg.eigvals(T.jacobian(a_, eps, n, psi, vt))
+    eig_types.append(dict(alpha=float(a_), lnD=float(np.log(T.g_curve(a_, eps, n, kap))), eig_re=[float(x.real) for x in ev], eig_im=[float(x.imag) for x in ev]))
+radius = []
+for dist in (0.01, 0.05, 0.15, 0.25, 0.45, 0.95):
+    rr = N.flow_collapse_radius(lnDH + dist, psi, vt, (-1.0, 0.0), n, eps)
+    radius.append(dict(distance=dist, radius_theta=rr))
+dd = np.array([r_["distance"] for r_ in radius if r_["radius_theta"]])
+rv = np.array([r_["radius_theta"] for r_ in radius if r_["radius_theta"]])
+pf = np.polyfit(np.log(dd), np.log(rv), 1)
+RES["hopf"] = dict(psi=psi, alpha_H=aH, lnD_H=lnDH, omega=float(np.sqrt(T.trace_det(aH, eps, n, psi, vt)[1])), period=float(2 * np.pi / np.sqrt(T.trace_det(aH, eps, n, psi, vt)[1])),
+                   transversality=float(0.5 * dtr / dlnD), eigenvalues=eig_types, basin_radius=radius, radius_exponent=float(pf[0]), radius_prefactor=float(np.exp(pf[1])))
+log("E5 Hopf: omega %.3f, transversality %.3f, basin radius ~ distance^%.2f" % (RES["hopf"]["omega"], RES["hopf"]["transversality"], pf[0]))
+
+# ---- noise dependence of the delayed exit near the Hopf-type point, and turning-point independence
+nz = []
+lo_ = w20["lnD_ext"] - 2.0
+for rt, at in ((1e-6, 1e-9), (1e-8, 1e-12), (1e-10, 1e-14), (1e-12, 1e-16)):
+    a_, ju, jd = N.flow_sweep(0.001, lo_, w20["lnD_ign"] + 1.0, psi, vt, n, eps, rtol=rt, atol=at)
+    nz.append(dict(rtol=rt, atol=at, v=0.001, area=a_, lnD_down=jd))
+tp = []
+for off in (0.5, 1.0, 2.0, 3.0):
+    a_, ju, jd = N.flow_sweep(0.001, lo_, w20["lnD_ign"] + off, psi, vt, n, eps)
+    tp.append(dict(offset=off, v=0.001, area=a_, lnD_down=jd))
+RES["hopf_noise"] = dict(by_tolerance=nz, by_turning_point=tp, lnD_hopf=lnDH, lnD_upper_fold=float(np.log(w20["D_fold_hi"])), attractor_area=T.attractor_loop_area(eps, n, psi, vt)[0],
+                         multiplicity_area=T.static_loop_area(eps, n, kap)[0])
+log("E5 noise dependence: %s" % [(d_["rtol"], round(d_["lnD_down"], 3), round(d_["area"], 3)) for d_ in nz])
+
+# ---- physical temperature path: Arrhenius kinetics, psi and epsilon vary along the path
+arr_flow = dict(tau_res=3.0, vartheta=1.0, cases=[])
+for dtad in (120.0, 160.0, 220.0):
+    an = N.arr_flow_analysis(3.0, 1.0, dtad)
+    case_ = dict(dtad=dtad, analysis=an, sweeps=[])
+    if an["bistable"]:
+        wv = an["window"]
+        # fixed-psi (exponential-model) estimate of the window width from the dimensionless numbers at the ignition fold
+        fl_ = an["fold_lower"]
+        wfk = T.bistable_window(fl_["eps"], n, fl_["psi"], 1.0)
+        case_["fk_estimate_width_K"] = None if wfk is None else float((wfk["lnD_ign"] - wfk["lnD_ext"]) * C.R_GAS * (fl_["T"] + 273.15) ** 2 / C.EA2)
+        if dtad in (160.0, 220.0):
+            for rate in (2.0, 0.5, 0.1, 0.02):
+                a_, tu, td = N.arr_flow_sweep(rate, wv["T_ext"] - 15.0, wv["T_ign"] + 15.0, 3.0, 1.0, dtad, n)
+                case_["sweeps"].append(dict(rate=rate, area=a_, T_up=tu, T_down=td))
+    arr_flow["cases"].append(case_)
+    log("E5 Arrhenius temperature path dT_ad=%.0f: window %s" % (dtad, an.get("window")))
+RES["arrhenius_flow"] = arr_flow
+
 json.dump(RES, open(os.path.join(HERE, "..", "results.json"), "w", encoding="utf-8"), indent=1, default=float)
 log("done")

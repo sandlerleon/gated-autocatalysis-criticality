@@ -143,3 +143,121 @@ def const_T_times(T_C, levels, n=1.5, f=1.0, tau_th_free=True):
         i = int(np.argmax(al >= lev))
         out[lev] = float(brentq(lambda t: sol.sol(t)[0] - lev, tt[max(i - 1, 0)], tt[i], xtol=1e-12))
     return out
+
+
+# ====================================================================================================================
+# Arrhenius continuous-flow reactor on a physical temperature path (both rate constants Arrhenius; psi and epsilon vary with T)
+# ====================================================================================================================
+from scipy.optimize import brentq as _brentq
+
+
+def _k1(T_C):
+    return A1 * np.exp(-EA1 / (R_GAS * (T_C + 273.15)))
+
+
+def _k2(T_C):
+    return A2 * np.exp(-EA2 / (R_GAS * (T_C + 273.15)))
+
+
+def arr_flow_curve(tau_res, vt, dtad, n=1.5, N=4000):
+    """Steady states of dalpha/dt = (k1 + k2 alpha)(1-alpha)^n - alpha/tau_res,  dT/dt = dtad (rate) - (T - Tinf)(1/tau_th + 1/tau_res)  (tau_th = vt tau_res).
+    Parametrized by the conversion alpha: T solves the conversion balance, Tinf = T - dtad alpha vt/(1+vt). Returns alpha, T, Tinf."""
+    al = np.geomspace(1e-7, 0.995, N)
+    T = np.empty(N)
+    for i, a in enumerate(al):
+        f = lambda TT: (_k1(TT) + _k2(TT) * a) * (1 - a) ** n * tau_res - a
+        T[i] = _brentq(f, -100.0, 3000.0, xtol=1e-10)
+    return al, T, T - dtad * al * vt / (1 + vt)
+
+
+def arr_flow_jacobian(a, T, Tinf, tau_res, vt, dtad, n=1.5):
+    tau_th = vt * tau_res
+
+    def F(y):
+        TT, aa = y
+        r = (_k1(TT) + _k2(TT) * aa) * (1 - aa) ** n
+        return np.array([dtad * r - (TT - Tinf) * (1 / tau_th + 1 / tau_res), r - aa / tau_res])
+    y0 = np.array([T, a])
+    J = np.zeros((2, 2))
+    for j in range(2):
+        h = 1e-6 * max(abs(y0[j]), 1.0)
+        e = np.zeros(2)
+        e[j] = h
+        J[:, j] = (F(y0 + e) - F(y0 - e)) / (2 * h)
+    return J
+
+
+def arr_flow_analysis(tau_res, vt, dtad, n=1.5, N=4000):
+    """Folds, stability change points and the window of two stable states on the Arrhenius temperature path."""
+    al, T, Tinf = arr_flow_curve(tau_res, vt, dtad, n, N)
+    d = np.diff(Tinf)
+    idx = np.where(np.sign(d[1:]) != np.sign(d[:-1]))[0] + 1
+    if len(idx) < 2:
+        return dict(bistable=False, folds=[])
+    ev = np.array([np.linalg.eigvals(arr_flow_jacobian(al[i], T[i], Tinf[i], tau_res, vt, dtad, n)) for i in range(len(al))])
+    maxre = ev.real.max(axis=1)
+    stable = maxre < 0
+    i_lo, i_hi = idx[0], idx[1]                      # lower (ignition) and upper fold indices
+    upper = np.where(stable & (np.arange(len(al)) > i_hi))[0]
+    k = int(upper[0]) if len(upper) else None
+    kind = "fold" if (k is not None and k - i_hi <= 2) else "hopf"
+    T_ext = float(Tinf[k]) if k is not None else None
+    T_ign = float(Tinf[i_lo])
+    win = None if (T_ext is None or T_ext >= T_ign) else dict(T_ext=T_ext, T_ign=T_ign, width_K=T_ign - T_ext, alpha_ext=float(al[k]), kind=kind)
+    # local dimensionless numbers at the folds
+    def psi_eps(i):
+        Tk = T[i] + 273.15
+        return dict(T=float(T[i]), psi=float(dtad * EA2 / (R_GAS * Tk ** 2)), eps=float(_k1(T[i]) / _k2(T[i])), D=float(_k2(T[i]) * tau_res), Ar=float(EA2 / (R_GAS * Tk)))
+    return dict(bistable=win is not None, window=win, fold_lower=dict(alpha=float(al[i_lo]), Tinf=float(Tinf[i_lo]), **psi_eps(i_lo)),
+                fold_upper=dict(alpha=float(al[i_hi]), Tinf=float(Tinf[i_hi]), **psi_eps(i_hi)),
+                trace_upper_fold=float(np.trace(arr_flow_jacobian(al[i_hi], T[i_hi], Tinf[i_hi], tau_res, vt, dtad, n))))
+
+
+def arr_flow_sweep(rate, T_lo, T_hi, tau_res, vt, dtad, n=1.5, dwell=20.0, dt_out=0.05, rtol=1e-8, atol=1e-10):
+    """Up-then-down ramp of the wall temperature Tinf at `rate` K per residence time, Arrhenius kinetics (time in residence times).
+    Returns loop area (alpha dTinf, K) and Tinf at which alpha crosses 0.5 on the up and down legs."""
+    tau_th = vt * tau_res
+    T_leg = abs(T_hi - T_lo) / rate
+    t1, t2, t3, t4, t_end = dwell, dwell + T_leg, 2 * dwell + T_leg, 2 * dwell + 2 * T_leg, 3 * dwell + 2 * T_leg
+
+    def Tinf_of(t):
+        return T_lo if t <= t1 else T_lo + rate * (t - t1) if t <= t2 else T_hi if t <= t3 else T_hi - rate * (t - t3) if t <= t4 else T_lo
+
+    def f(t, y):
+        TT, a = y
+        a = min(max(a, 0.0), 1.0)
+        r = (_k1(TT) + _k2(TT) * a) * (1 - a) ** n
+        return [(dtad * r - (TT - Tinf_of(t)) * (1 / tau_th + 1 / tau_res)) * tau_res, (r - a / tau_res) * tau_res]        # time in units of tau_res
+    ts = np.arange(0.0, t_end, dt_out)
+    sol = solve_ivp(f, [0, t_end], [T_lo, 0.0], method="LSODA", rtol=rtol, atol=atol, t_eval=ts, max_step=min(0.5, 0.5 / max(rate, 1e-6)))
+    al = sol.y[1]
+    Ti = np.array([Tinf_of(t) for t in sol.t])
+    up = (sol.t >= t1) & (sol.t <= t2)
+    dn = (sol.t >= t3) & (sol.t <= t4)
+    area = float(np.trapezoid(al[up], Ti[up]) - np.trapezoid(al[dn][::-1], Ti[dn][::-1]))
+    return abs(area), float(Ti[up][np.argmax(al[up] > 0.5)]), float(Ti[dn][np.argmax(al[dn] < 0.5)])
+
+
+def flow_collapse_radius(lnD, psi, vt, direction, n=1.5, eps=3e-3, t_end=2500.0, steps=26):
+    """Smallest perturbation of the upper steady state, along `direction` = (d theta, d alpha), after which the trajectory collapses to the lower state
+    (alpha < 0.5 at t_end): the radius of the basin of the upper state along that direction (None if no collapse up to 0.5). Requires theory.branches_at."""
+    import theory as _T
+    D = float(np.exp(lnD))
+    kap = _T.kappa(psi, vt)
+    up = _T.branches_at(D, eps, n, kap)[-1]
+    th0 = up * vt / (1 + vt)
+    f = _flow_rhs(D, psi, vt, n, eps)
+
+    def collapses(delta):
+        sol = solve_ivp(f, [0, t_end], [th0 + direction[0] * delta, up + direction[1] * delta], method="LSODA", rtol=1e-10, atol=1e-13, max_step=0.5, dense_output=True)
+        return sol.sol(t_end)[1] < 0.5
+    lo, hi = 1e-6, 0.5
+    if not collapses(hi):
+        return None
+    for _ in range(steps):
+        m = float(np.sqrt(lo * hi))
+        if collapses(m):
+            hi = m
+        else:
+            lo = m
+    return float(hi)
