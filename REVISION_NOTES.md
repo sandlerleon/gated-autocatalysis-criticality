@@ -21,3 +21,13 @@ Things the review asked for that remain open: a real-data comparison; the unstab
 | Novelty comparison | Table 1: what follows from established theory (generalized time, Semenov/Frank-Kamenetskii, consumption, induction period, CSTR stability) and what is specific to the melt-gated system. |
 | Reproducibility and package | 41 checks. A clean clone of the release tag was tested and results.json regenerated (see the release notes). Manuscript PDF and cover-letter PDF are in the package; all 22 pages were inspected. |
 | AI identification | The session's own environment reports the model as Sonnet 5.5, identifier claude-sonnet-5-5, used through the Claude Code environment of the Claude desktop application; the manuscript now says so. The author should confirm this from their own account. |
+
+
+## v1.3.0: retarget to Reaction Kinetics, Mechanisms and Catalysis (7 October 2026)
+
+| Item | What was done |
+|---|---|
+| Journal | Springer RKMC format: numbered sections, abstract of at most 250 words (244), highlights, Statements and Declarations, Springer reference style, figures without titles in PNG and EPS. |
+| Overlap with the AutoLatch study | New Section 1.1 'Relationship to previous computational work' cites the AutoLatch preprint (ChemRxiv/Zenodo) and the v3.1 archive, states that the coupled kinetic model, the parameter set and the integrator are not claimed as new, that no figure is reproduced, and points to the provenance table; the cover letter discloses the related submission and offers the earlier manuscript. |
+| Rubriq pass | 82 punctuation and word-choice hunks merged selectively (comma fixes, increase for rise, approximately for about, percent spacing); 214 rejected, among them changes that altered the science or introduced errors ('gate curve', 'twofold-fold greater than', '%3%', 'Quasinist', 'Kemenetskii', 'xxol'). |
+| Files | docx only; PDFs removed from the repository and not deposited. |

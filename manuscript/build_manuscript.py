@@ -22,8 +22,8 @@ os.makedirs(OUT, exist_ok=True)
 R = json.load(open(os.path.join(ROOT, "results.json"), encoding="utf-8"))
 REFS = json.load(open(os.path.join(ROOT, "refs", "refs_cache.json"), encoding="utf-8"))
 ZEN = json.load(open(os.path.join("C:" + os.sep, "YouTube", "_gac_zenodo_state.json")))
-SW_DOI, PP_DOI = (ZEN.get("software_1.2.0") or ZEN.get("software_1.1.0") or ZEN["software"])["doi"], (ZEN.get("publication_v3") or ZEN.get("publication_v2") or ZEN["publication"])["doi"]
-RELEASE = os.environ.get("RELEASE_TAG", "v1.2.0")
+SW_DOI, PP_DOI = (ZEN.get("software_1.3.0") or ZEN.get("software_1.2.0") or ZEN["software"])["doi"], (ZEN.get("publication_v4") or ZEN.get("publication_v3") or ZEN["publication"])["doi"]
+RELEASE = os.environ.get("RELEASE_TAG", "v1.3.0")
 REPO = "https://github.com/sandlerleon/gated-autocatalysis-criticality"
 
 TITLE = "Closed-Form Storage Stability, Induction Delay, and Thermal-Feedback Criticality of Melt-Gated Autocatalytic Cure"
@@ -101,7 +101,7 @@ def sub(text):
     return re.sub(r"@(\w+)@", lambda m: str(NUM[m.group(1)]) if m.group(1) in NUM else m.group(0), text)
 
 
-doc = H.new_document(size=11, line=1.5)
+doc = H.new_document(size=10, line=1.5)
 H.page_numbers_and_line_numbers(doc, line_numbers=False)
 
 
@@ -114,9 +114,9 @@ def HD(text, level=1):
     return H.heading(doc, text, level)
 
 
-def FIG(path, caption, alt, width=6.4):
+def FIG(path, caption, alt, width=4.7):
     FIGN[0] += 1
-    H.figure(doc, os.path.join(ROOT, "figures", path), width_in=width, cap="**Fig. %d** %s" % (FIGN[0], cites(sub(caption))), alt=alt)
+    H.figure(doc, os.path.join(ROOT, "figures", path), width_in=width, cap="**Fig. %d** %s" % (FIGN[0], cites(sub(caption)).strip().rstrip(".")), alt=alt)
 
 
 def TAB(rows, caption, widths=None, size=8.5, label=None):
@@ -178,26 +178,32 @@ for line in ("Leon Sandler", "Independent researcher, Northbrook, Illinois, USA"
     q.paragraph_format.space_after = H.Pt(0)
 doc.add_paragraph()
 HD("Abstract")
-ABS = ("A cure triggered by the melting of an encapsulated catalyst combines a distribution of capsule melting temperatures, autocatalytic kinetics, and exothermic feedback. "
-       "We derive what can be written in closed form for the lumped model and test each result against the full equations. "
-       "(i) At constant temperature the gated cure is exactly the isothermal cure on the integrated availability of the catalyst; the delay of a fully activated population is "
-       "τ_rel[1 − exp(−t/τ_rel)], approaching the release time constant τ_rel only at late conversion. "
-       "(ii) The isothermal cure time is exact by one quadrature. "
-       "(iii) For Gaussian capsule melting temperatures of spread σ the storage conversion is (a/b)[exp(b f t_eff) − 1] with open fraction f = Φ(−Δ/σ_eff), which bounds σ to within %s %% of the "
-       "population equations. "
-       "(iv) The frozen-conversion thermal balance has an algebraic branch only for Π = ψΘ below Π_c = (1+n)^(1+n)/[e n^n (1+ε)^(1+n)] (%s for n = 3/2); "
-       "integrated thresholds approach it as Θ → 0 and, with Arrhenius kinetics, exceed it by about exp(1/Ar) (within %s %% on the tested grid). "
-       "(v) In a continuous-flow reactor the steady-state curve has two folds above κ_c = %s, but the upper branch can lose stability at a Hopf-type point before its fold; "
-       "the window of two stable states is computed, also on an Arrhenius temperature path, while sweep loops through that point depend on noise and are not shown to converge to its loop area. All parameters are illustrative; no experimental data are used."
-       % (pct(max(dr_dev), 0), f2(PICE[1.5]), pct(max(ar_dev), 0), f2(KC)))
+awin = AFC[220.0]["analysis"]["window"]["width_K"]
+ABS = ("A cure triggered by the melting of an encapsulated catalyst combines a spread of capsule melting temperatures, autocatalytic kinetics and heat release that feeds back on the temperature. "
+       "We derive closed-form results for a lumped model and test each against the full rate equations. "
+       "At constant temperature the gated cure equals the ungated cure evaluated on the cumulative amount of catalyst released, so the delay caused by the gate grows with conversion and approaches the "
+       "release time constant only late in the cure. The storage conversion of a Gaussian population of capsules follows from the fraction of capsules that are open, which bounds the spread of "
+       "melting temperatures to within %s %% of the full equations. The thermal balance with the conversion held fixed has a critical value of the product of the reduced exothermicity and the "
+       "ratio of thermal to reaction time, given in closed form (%s for reaction order 3/2); integrated thresholds approach it for fast heat loss, and Arrhenius kinetics raise it by about exp(1/Ar), "
+       "with Ar the reduced activation energy (within %s %% on the tested grid). In a continuous-flow reactor two folds of the steady-state curve do not imply two stable states: the upper "
+       "branch can lose stability at a Hopf-type point before its fold. The window of two stable states is computed on an Arrhenius temperature path (%.0f K here), while sweep loops "
+       "through that point depend on noise. All parameters are illustrative; no experimental data are used."
+       % (pct(max(dr_dev), 0), f2(PICE[1.5]), pct(max(ar_dev), 0), awin))
 H.para(doc, ABS, align="justify")
 NUM["absw"] = len(ABS.split())
 print("abstract words:", NUM["absw"])
-assert NUM["absw"] <= 250, NUM["absw"]
-P("**Keywords:** autocatalytic cure kinetics; thermal runaway; encapsulated catalyst; Lambert W function; saddle-node and Hopf bifurcation; hysteresis", align="left")
+assert 150 <= NUM["absw"] <= 250, NUM["absw"]
+HIGH = ["Melt-triggered catalyst release delays a cure by a conversion-dependent time, not a fixed one",
+        "A closed-form rule limits the spread of capsule melting points for acceptable storage life",
+        "In a flow reactor, two steady states must be checked for stability before predicting hysteresis"]
+assert all(len(h) <= 120 for h in HIGH), [len(h) for h in HIGH]
+H.para(doc, "**Article Highlights**", align="left")
+for h_ in HIGH:
+    H.bullet(doc, h_)
+P("**Keywords:** autocatalytic cure kinetics; thermal runaway; encapsulated catalyst; reactor stability; Hopf bifurcation; hysteresis", align="left")
 
 # ================================================================== I Introduction
-HD("I. Introduction")
+HD("1 Introduction")
 P("Encapsulating a reactive component and releasing it on demand is a general way to separate the stability of a formulation from the speed of its cure. The best-known "
   "instance is the self-healing polymer, in which embedded capsules release a healing agent when damaged [[white2001]]; thermally triggered variants use the melting of a wax or "
   "polymer shell, whose phase-change behavior is the subject of a literature on microencapsulated phase-change materials [[jamekhorshid2014]] and whose release is described by a family of "
@@ -207,21 +213,25 @@ P("Encapsulating a reactive component and releasing it on demand is a general wa
   "rate is the subject of the classical theory of thermal explosion of Semenov and Frank-Kamenetskii [[semenov1928,frankkamenetskii1969]]. That theory has been extended to reactant "
   "consumption [[adler1964]] and to the induction period [[kassoy1980]], and the multiplicity and stability of the steady states of a heated, continuously fed reactor were analyzed by "
   "van Heerden, by Aris and Amundson, and by Uppal, Ray and Poore [[vanheerden1953,aris1958,uppal1974,grayscott1990]].")
-P("Calorimetric kinetic analysis is well codified [[vyazovkin2011,zhao2019]], and the separable form of the cure law is a standard route to closed-form cure times, with the "
+P("Calorimetric kinetic analysis, usually by differential scanning calorimetry (DSC), is well codified [[vyazovkin2011,zhao2019]], and the separable form of the cure law is a standard route to closed-form cure times, with the "
   "temperature history entering through a generalized time [[ozawa1965]]. In that literature the rate law and the thermal runaway of a specimen are usually treated separately. The question "
   "addressed here is narrower: for the lumped model of a *melt-gated* autocatalytic cure, which statements linking the quantities that a calorimeter measures (the rate constants of the cure, "
   "the width of the melting endotherm of the capsules, the thermal time constant of a specimen) to storage stability, delay and runaway can be written in closed form, and how well do "
   "they hold against the full equations?")
 P("The paper separates standard identities from results specific to this system. Proposition 1 is the generalized-time identity [[ozawa1965]] applied to the catalyst availability; its content is the "
-  "identification of the clock and the resulting delay law (Section III A). Proposition 2 collects standard integrals and one sharpness law (III B). Proposition 3, the storage conversion of a Gaussian capsule "
-  "population and the bound on the melting-temperature spread that follows from it, is specific to the gated system (III C). Proposition 4 applies the Semenov fold of the frozen-conversion balance to the "
-  "Kamal–Sourour consumption law, which gives a closed-form critical number, its overshoot below the fold and an Arrhenius correction (III D); the classical treatment of consumption "
-  "[[adler1964]] is not specific to autocatalysis. Proposition 5 gives the steady states, the Jacobian and the stable window of a continuous-flow reactor with this kinetics (III E). A synthetic-data "
-  "test shows how the closed forms behave as fitting functions (III F). To the author's knowledge, in the sources examined, these results have not been assembled for a gated autocatalytic cure.")
-P("The illustrative parameter set and the capsule-population picture were introduced in a numerical study by the author [[sandler2026]]: the rate constants and orders of @T:par@, the "
-  "release rate constant, the logistic activation and the mean melting temperature, the adiabatic rise, and the reference integrator come from that study. The analytic results below are new, "
-  "and the comparisons of that study with first-order controls are not used here. The model is lumped and every parameter is illustrative: nothing is fitted to measurements, and the paper "
-  "makes no claim about a particular material.")
+  "identification of the clock and the resulting delay law (Section 3.1). Proposition 2 collects standard integrals and one sharpness law (Section 3.2). Proposition 3, the storage conversion of a Gaussian capsule "
+  "population and the bound on the melting-temperature spread that follows from it, is specific to the gated system (Section 3.3). Proposition 4 applies the Semenov fold of the frozen-conversion balance to the "
+  "Kamal–Sourour consumption law, which gives a closed-form critical number, its overshoot below the fold and an Arrhenius correction (Section 3.4); the classical treatment of consumption "
+  "[[adler1964]] is not specific to autocatalysis. Proposition 5 gives the steady states, the Jacobian and the stable window of a continuous-flow reactor with this kinetics (Section 3.5). A synthetic-data "
+  "test shows how the closed forms behave as fitting functions (Section 3.6). To the author's knowledge, in the sources examined, these results have not been assembled for a gated autocatalytic cure.")
+HD("1.1 Relationship to previous computational work", 2)
+P("The model equations of Section 2.1 (Eqs. (1)–(3)), the illustrative parameter set of @T:par@, the capsule-population picture, the logistic activation and the reference integrator are those of an earlier "
+  "numerical study by the author [[sandler2026]], posted as a ChemRxiv preprint and submitted for publication elsewhere; they are not claimed as new here. That study asks whether thermal gating improves delayed cure "
+  "and answers it numerically (cure timing, comparison with first-order controls, gate-width trade-off, regime maps). A later version of the same numerical study [[sandler2026b]] added numerical storage-stability "
+  "and design-rule tables for capsule populations. Those numerical results are not presented as new here: Proposition 3 reproduces them from a closed form and uses them to test it. The present paper asks a different "
+  "question: which statements about storage, delay, criticality and reactor stability can be derived analytically, and how well do they hold? Its own contributions are listed in @T:prov@. No figure of the earlier "
+  "study is reproduced, and its comparisons with first-order controls are not used. The related submission is disclosed to the editor in the cover letter. The model is lumped and every parameter is illustrative: nothing is fitted "
+  "to measurements, and the paper makes no claim about a particular material.")
 
 rows = [["Result", "Established antecedent", "Specific to the melt-gated autocatalytic system"],
         ["Availability clock and delay (Prop. 1)", "Generalized-time (time-change) identity of separable kinetics [[ozawa1965]]", "Identification of the clock with the integrated catalyst availability; the conversion-dependent delay τ_{rel}[1 − exp(−t/τ_{rel})]; the clock for incomplete activation"],
@@ -232,9 +242,9 @@ rows = [["Result", "Established antecedent", "Specific to the melt-gated autocat
 TAB(rows, "Provenance of the results: what follows from established theory and what is specific to this system (to the author's knowledge, in the sources examined).", widths=[1.5, 2.4, 2.9], size=8, label="prov")
 
 # ================================================================== II Model
-HD("II. Model and scaling")
-HD("A. Equations", 2)
-P("The conversion α of the resin obeys a Kamal–Sourour law with reaction order n for the unreacted fraction and first order in the autocatalytic term,")
+HD("2 Model and scaling")
+HD("2.1 Equations", 2)
+P("The conversion α of the resin obeys, in the rate equations (ordinary differential equations, ODEs) below, a Kamal–Sourour law with reaction order n for the unreacted fraction and first order in the autocatalytic term,")
 EQ(FRAC(V("dα"), V("dt")) + EQS + AVC + Tt("(t)") + DEL(sv("k", "1") + PLUS + sv("k", "2") + V("α")) + SUPN(DEL(Tt("1") + MINUS + V("α")), V("n")) + Tt(","), "e1")
 P("where ⟨C⟩ is the availability of the catalyst averaged over the capsule population (the fraction of the catalyst that has been released, 0 ≤ ⟨C⟩ ≤ 1). The temperature "
   "of the well-mixed specimen obeys a lumped energy balance with Newtonian loss and the adiabatic temperature rise ΔT_{ad} of the reaction,")
@@ -244,8 +254,8 @@ P("Capsule *i* has a melting temperature T_{m,i}, drawn from a Gaussian of mean 
 EQ(FRAC(SUBN(V("dC"), V("i")), V("dt")) + EQS + sv("k", "rel") + DEL(V("T")) + DEL(SUBN(V("G"), V("i")) + DEL(V("T")) + MINUS + SUBN(V("C"), V("i")), "[", "]") + Tt(",   ") +
    SUBN(V("G"), V("i")) + EQS + SUPN(DEL(Tt("1") + PLUS + Tt("exp") + DEL(MINUS + FRAC(V("T") + MINUS + SUBN(V("T"), V("m,i")), sv("w", "0")))), Tt("−1")) + Tt(",   ") + AVC + EQS +
    FRAC(Tt("1"), V("K")) + Tt("∑") + SUBN(V("C"), V("i")) + Tt("."), "e3")
-P("The initial state is α(0) = 0 and C_{i}(0) = 0 unless stated, and T(0) = T_{∞} for the isothermal-start problems of Sections III A–D. The rate constants are Arrhenius, *k*_{j} = *A*_{j} exp(−*E*_{j}/*RT*), "
-  "for *j* = 1 (background), 2 (autocatalytic) and rel (release). The model has no spatial structure, no diffusion control and no vitrification (Section VI). Throughout, the *illustrative* parameter set "
+P("The initial state is α(0) = 0 and C_{i}(0) = 0 unless stated, and T(0) = T_{∞} for the isothermal-start problems of Sections 3.1–3.4. The rate constants are Arrhenius, *k*_{j} = *A*_{j} exp(−*E*_{j}/*RT*), "
+  "for *j* = 1 (background), 2 (autocatalytic) and rel (release). The model has no spatial structure, no diffusion control and no vitrification (Section 6). Throughout, the *illustrative* parameter set "
   "of @T:par@ is used.")
 rows = [["Quantity", "Symbol", "Value"],
         ["Background rate constant", "A_{1}, E_{1}", "2.0 × 10^{3} min^{−1}, 50 kJ mol^{−1}"],
@@ -253,29 +263,29 @@ rows = [["Quantity", "Symbol", "Value"],
         ["Reaction order", "n", "1.5 (1 and 2 where stated)"],
         ["Release rate constant", "A_{rel}, E_{rel}", "6.4 × 10^{6} min^{−1}, 60 kJ mol^{−1}"],
         ["Mean melting temperature, activation width", "T_{m}, w_{0}", "118 °C, 0.5 °C"],
-        ["Adiabatic rise, thermal time constant", "ΔT_{ad}, τ_{th}", "220 K, varied (Section III D)"],
+        ["Adiabatic rise, thermal time constant", "ΔT_{ad}, τ_{th}", "220 K, varied (Section 3.4)"],
         ["Rate constants at 140 °C", "k_{1}, k_{2}, k_{rel}", "%.2e, %.3f, %.3f min^{−1}" % (a140, b140, kr140)]]
 TAB(rows, "Illustrative parameter set (not fitted to any material; taken from Ref. [[sandler2026]]). Arrhenius forms are *k* = *A* exp(−*E*/*RT*). Note that *E*_{1} ≠ *E*_{2}.", widths=[2.6, 1.3, 2.7], label="par")
-HD("B. Dimensionless groups and the exponential comparison model", 2)
+HD("2.2 Dimensionless groups and the exponential comparison model", 2)
 P("Define ε = k_{1}/k_{2}, the thermal number Θ = τ_{th}k_{2}(T_{∞}), the reduced exothermicity ψ = ΔT_{ad}E_{2}/(RT_{∞}^{2}), the activation number Ar = E_{2}/(RT_{∞}) and the release "
   "number Λ = k_{2}/k_{rel}. The combination that controls thermal feedback is")
 EQ(Tt("Π") + EQS + Tt("ψ") + Tt("Θ") + EQS + FRAC(sv("ΔT", "ad") + sv("E", "2") + sv("τ", "th") + sv("k", "2"), V("R") + SUPN(sv("T", "∞"), Tt("2"))) + Tt("."), "ePi")
-P("The *exponential comparison model* used in Sections III D and III E replaces the Arrhenius dependence of both rate constants by the common Frank-Kamenetskii form k_{j}(T) = k_{j}(T_{∞}) exp(ψθ), "
+P("The *exponential comparison model* used in Sections 3.4 and 3.5 replaces the Arrhenius dependence of both rate constants by the common Frank-Kamenetskii (FK) form k_{j}(T) = k_{j}(T_{∞}) exp(ψθ), "
   "θ = (T − T_{∞})/ΔT_{ad}, and treats ε as a constant. This is exact when the activation energies are equal and is a good description of the rate near the fold when the background term is "
   "negligible there: the fold occurs at conversions of order 0.4, where the autocatalytic term (α ≈ 0.4) exceeds the background term (ε = 3 × 10^{−3}) by two orders of magnitude, so the "
-  "different activation energy of k_{1} (50 against 65 kJ mol^{−1}) matters little. The *Arrhenius simulations* of Sections III D (@T:arr@) do not use this simplification: both k_{1}(T) and k_{2}(T) "
+  "different activation energy of k_{1} (50 against 65 kJ mol^{−1}) matters little. The *Arrhenius simulations* of Section 3.4 (@T:arr@) do not use this simplification: both k_{1}(T) and k_{2}(T) "
   "follow their own Arrhenius law and ε = k_{1}/k_{2} is evaluated at T_{∞}.")
-HD("C. Computation and use of AI assistance", 2)
+HD("2.3 Computation and use of AI assistance", 2)
 P("All numerical results are produced by the released scripts (run_all.py writes results.json; every number in the text is read from it, none is typed by hand), with the reference integrator, "
   "solver settings and protocols given in Appendix A. The model code, the closed-form module, the tests, the figure scripts and a first draft of the text were produced with the assistance of "
   "Claude Sonnet 5.5 (model identifier claude-sonnet-5-5; Anthropic), used through the Claude Code environment of the Claude desktop application on the author's computer (the model identifier is the one reported by that environment), because the author is an independent "
   "researcher without a computational group. The assistant wrote and ran code, drafted derivations and checked algebra; closed forms were verified against independent numerical integration by the "
-  "test suite (code/test_theory.py) and by the comparisons reported in Section III, and every journal reference was resolved through Crossref. The assistant did not enter or alter any numerical result "
+  "test suite (code/test_theory.py) and by the comparisons reported in Section 3, and every journal reference was resolved through Crossref. The assistant did not enter or alter any numerical result "
   "by hand. The author is responsible for the content.")
 
 # ================================================================== III Results
-HD("III. Results")
-HD("A. Proposition 1: the gated cure runs on the clock of integrated availability", 2)
+HD("3 Results")
+HD("3.1 Proposition 1: the gated cure runs on the clock of integrated availability", 2)
 P("**Proposition 1.** At constant temperature, with α(0) = 0 and C_{i}(0) = 0, let F(α) = (k_{1} + k_{2}α)(1 − α)^{n}. Then the gated conversion obeys")
 EQ(SUBSUP(Tt("∫"), Tt("0"), V("α")) + FRAC(V("dx"), V("F") + DEL(V("x"))) + EQS + V("s") + DEL(V("t")) + Tt(",   ") + V("s") + DEL(V("t")) + EQS + SUBSUP(Tt("∫"), Tt("0"), V("t")) + AVC + DEL(V("t′")) + V("dt′") + Tt("."), "eclock")
 P("*Proof.* With T constant, dα/dt = ⟨C⟩(t)F(α) is separable: dα/F(α) = ⟨C⟩dt. Integration from the initial state gives the identity. ∎ This is the generalized-time identity [[ozawa1965]] with the "
@@ -285,12 +295,12 @@ EQ(sv("t", "gated") + DEL(V("α")) + MINUS + sv("t", "iso") + DEL(V("α")) + EQS
 P("The delay is therefore conversion dependent: it lies between 0 and τ_{rel} and approaches τ_{rel} only when t_{gated} ≫ τ_{rel}. The fractional deficit from τ_{rel} is below 1 %% when t_{gated}/τ_{rel} exceeds "
   "ln 100 = %.3f. At 140 °C (τ_{rel} = %.2f min) the delay is %.2f min at α = 0.001 (t_{gated}/τ_{rel} = %.2f), %.2f min at α = 0.01, and %.2f, %.2f and %.2f min at α = 0.1, 0.5 and 0.9 (@T:delay@); the "
   "constant shift is a good description for α ≳ 0.1 at this temperature and fails at early conversion. Independent adaptive integration of the gate and cure equations reproduces Eq. (@edelay@) to "
-  "the integration tolerance in every row, and integrating the full model with the reference RK4 integrator at 125, 140 and 155 °C and α = 0.1, 0.5, 0.9 reproduces the gated times of Eq. (@eclock@) "
+  "the integration tolerance in every row, and integrating the full model with the reference fourth-order Runge–Kutta (RK4) integrator at 125, 140 and 155 °C and α = 0.1, 0.5, 0.9 reproduces the gated times of Eq. (@eclock@) "
   "to a relative error of at most %.1e." % (R["delay_1pct_ratio"], 1 / kr140, d_ar(0.001)["delay"], d_ar(0.001)["ratio"], d_ar(0.01)["delay"], d_ar(0.1)["delay"], d_ar(0.5)["delay"], d_ar(0.9)["delay"], clock_err))
 P("For incomplete activation, with open fraction f < 1 (a fraction of the capsules that has not melted at the operating temperature), the clock is s(t) = f[t − τ_{rel}(1 − exp(−t/τ_{rel}))], so the delay "
   "relative to the ungated resin is not a constant shift: the gated cure is slowed in proportion to 1/f as well. For f = 0.5 at 140 °C the integrated times to α = 0.1, 0.5 and 0.9 are %.1f, %.1f and %.1f min, "
   "and the clock gives %.1f, %.1f and %.1f min, while the fully open population reaches them at %.1f, %.1f and %.1f min. A population whose mean melting temperature lies below the operating temperature "
-  "is not necessarily fully open: a broad population has a tail of capsules that melt above it, and f must be computed from the melting-temperature distribution (Section III C). The statement is "
+  "is not necessarily fully open: a broad population has a tail of capsules that melt above it, and f must be computed from the melting-temperature distribution (Section 3.3). The statement is "
   "exact only at constant temperature; a heat-up transient or an exotherm adds a temperature-dependent delay that Proposition 1 does not describe." % (
       IA[0]["t_ode"], IA[1]["t_ode"], IA[2]["t_ode"], IA[0]["t_clock"], IA[1]["t_clock"], IA[2]["t_clock"], IA[0]["t_full_open"], IA[1]["t_full_open"], IA[2]["t_full_open"]))
 rows = [["α", "t_{iso}(α) (min)", "t_{gated} (min), integrated", "Delay (min)", "τ_{rel}[1 − exp(−t_{gated}/τ_{rel})] (min)", "t_{gated}/τ_{rel}"]]
@@ -298,7 +308,7 @@ for d in DA:
     rows.append(["%g" % d["alpha"], f2(d["t_iso"]), f2(d["t_gated"]), f2(d["delay"]), f2(d["delay_formula"]), f2(d["ratio"])])
 TAB(rows, "Delay of a fully open population relative to the ungated resin at 140 °C (n = 3/2, τ_{rel} = %.2f min): integrated gate and cure equations against Eq. (@edelay@)." % (1 / kr140), widths=[0.6, 1.1, 1.4, 0.9, 1.7, 1.0], label="delay")
 
-HD("B. Proposition 2: isothermal cure time, induction, and sharpness", 2)
+HD("3.2 Proposition 2: isothermal cure time, induction, and sharpness", 2)
 P("**Proposition 2.** With a = k_{1} and b = k_{2}, the isothermal time to reach conversion α is, for any n, t_{iso}(α) = ∫_{0}^{α} dx/[(a + bx)(1 − x)^{n}], and for n = 1")
 EQ(sv("t", "iso") + DEL(V("α")) + EQS + FRAC(Tt("1"), V("a") + PLUS + V("b")) + Tt("ln") + FRAC(V("a") + PLUS + V("b") + V("α"), V("a") + DEL(Tt("1") + MINUS + V("α"))) + Tt("."), "eiso")
 P("*Proof.* Partial fractions of 1/[(a + bx)(1 − x)] give (a + b)^{−1}[b/(a + bx) + 1/(1 − x)], and integration gives the logarithm. ∎ For small α the factor (1 − x)^{n} is close to 1, "
@@ -315,9 +325,9 @@ P("Sharpness is then controlled by the rate-constant ratio alone, and only logar
 FIG("fig1_clock_sharpness.png", "(a) Gated and ungated cure at constant temperature (140 °C): the gated curve is the isothermal curve evaluated on the integrated-availability clock, and the integrated ODE (circles) agrees. "
     "(b) Delay of the gated cure relative to the ungated resin as a function of the conversion level: integrated (points), Eq. (@edelay@) (line), and the limit τ_{rel} (dashed). "
     "(c) Sharpness against the rate-constant ratio: exact n = 1, the asymptotic law Eq. (@elaw@), and integrated results for n = 3/2.",
-    "Three panels. (a) Conversion against time for the ungated and gated resin with integrated points. (b) Delay against conversion approaching the release time constant. (c) Sharpness against the logarithm of the rate-constant ratio.", width=6.7)
+    "Three panels. (a) Conversion against time for the ungated and gated resin with integrated points. (b) Delay against conversion approaching the release time constant. (c) Sharpness against the logarithm of the rate-constant ratio.")
 
-HD("C. Proposition 3: storage conversion of a capsule population and a bound on the spread", 2)
+HD("3.3 Proposition 3: storage conversion of a capsule population and a bound on the spread", 2)
 P("A capsule that is open at the storage temperature T_{s} releases catalyst that drives the cure at T_{s}. For a Gaussian spread σ of melting temperatures and a logistic activation of width *w*_{0}, "
   "the equilibrium open fraction at a margin Δ = T_{m} − T_{s} is the Gaussian–logistic convolution, which the probit approximation (matching the variance π²w_{0}²/3 of the logistic) writes as")
 EQ(V("f") + EQS + Tt("Φ") + DEL(MINUS + FRAC(V("Δ"), sv("σ", "eff"))) + Tt(",   ") + SUBN(V("σ"), Tt("eff")) + Tt("²") + EQS + SUPN(V("σ"), Tt("2")) + PLUS + FRAC(SUPN(Tt("π"), Tt("2")) + SUPN(sv("w", "0"), Tt("2")), Tt("3")) + Tt("."), "ef")
@@ -345,7 +355,7 @@ TAB(rows, "Largest admissible melting-temperature spread σ^{*} for a storage ti
 FIG("fig2_storage.png", "(a) Closed-form storage conversion Eq. (@eleak@) against the population ODE for margins of 3, 6 and 10 °C. (b) Largest admissible spread σ^{*} (Eq. (@esigma@)) as a function of the tolerance η; "
     "open symbols are roots of the population ODE.", "Two panels. (a) Log-log scatter of closed-form against ODE storage conversion lying on the identity line. (b) Largest admissible spread against tolerance for three margins with ODE roots.")
 
-HD("D. Proposition 4: thermal-feedback criticality, overshoot, and Arrhenius correction", 2)
+HD("3.4 Proposition 4: thermal-feedback criticality, overshoot, and Arrhenius correction", 2)
 P("When the thermal time constant is short compared with the reaction time (Θ ≪ 1), the temperature rise θ = (T − T_{∞})/ΔT_{ad} of the exponential comparison model follows the reaction quasi-statically with the "
   "conversion frozen, θ = Θ r(α) exp(ψθ), where r(α) = (ε + α)(1 − α)^{n} is the isothermal rate in units of k_{2}. Multiplying by ψ gives ψθ exp(−ψθ) = Πr, whose solution, if Πr ≤ 1/e, is")
 EQ(V("ψθ") + EQS + MINUS + sv("W", "0") + DEL(MINUS + Tt("Π") + V("r") + DEL(V("α"))) + Tt("."), "eW")
@@ -386,9 +396,9 @@ for r in AR:
 TAB(rows, "Operational critical number of the Arrhenius model (ungated, isothermal start; peak rise 0.3ΔT_{ad}) against the exponential-model value FK(Θ) multiplied by the frozen-fold factor of Eq. (@earr@) and by exp(1/Ar) "
           "(difference = prediction/Arrhenius − 1), and the effect of a release lag.", widths=[0.5, 0.45, 0.45, 0.8, 0.75, 0.7, 0.7, 0.75, 0.7, 0.8], size=7.5, label="arr")
 FIG("fig3_criticality.png", "(a) Operational critical number against Θ for n = 1, 3/2 and 2 (points: integrations; dashed: finite-ε Eq. (@ePic@)). (b) Quasi-steady overshoot below Π_{c}: Lambert-W formula, fold normal form, and integrations. "
-    "(c) Arrhenius operational critical number against FK(Θ) times the frozen-fold factor.", "Three panels. (a) Critical number against Theta for three reaction orders with asymptotes. (b) Peak overshoot against Pi over Pi critical with Lambert-W curve and integrated points. (c) Scatter of Arrhenius critical number against prediction near the identity line.", width=6.7)
+    "(c) Arrhenius operational critical number against FK(Θ) times the frozen-fold factor.", "Three panels. (a) Critical number against Theta for three reaction orders with asymptotes. (b) Peak overshoot against Pi over Pi critical with Lambert-W curve and integrated points. (c) Scatter of Arrhenius critical number against prediction near the identity line.")
 
-HD("E. Proposition 5: continuous-flow reactor, steady states, stability, and hysteresis", 2)
+HD("3.5 Proposition 5: continuous-flow reactor, steady states, stability, and hysteresis", 2)
 P("Let fresh resin of conversion 0 enter at the wall temperature with residence time τ_{res}, and let ϑ = τ_{th}/τ_{res} and D = k_{2}τ_{res}. In units of τ_{res} and in the exponential model,")
 EQ(FRAC(V("dα"), Tt("dt′")) + EQS + V("D") + V("r") + MINUS + V("α") + Tt(",   ") + FRAC(V("dθ"), Tt("dt′")) + EQS + V("D") + V("r") + MINUS + V("θ") + DEL(Tt("1") + PLUS + FRAC(Tt("1"), Tt("ϑ"))) + Tt(",   ") + V("r") + EQS + DEL(V("ε") + PLUS + V("α")) + SUPN(DEL(Tt("1") + MINUS + V("α")), V("n")) + SUPN(Tt("e"), Tt("ψθ")) + Tt("."), "eflow")
 P("*Control parameter.* In the exponential model D is varied at fixed ϑ and ψ. This is a mathematical parameter sweep, not by itself a physical temperature sweep: a change of the wall temperature also "
@@ -465,7 +475,7 @@ for psi in (3.0, 4.5, 8.0, 20.0):
 TAB(rows, "Integrated hysteresis-loop area ∮α d ln D of the sweeps at seven sweep rates v (per residence time), with the attractor loop area, the fold-to-fold multiplicity area and a power-law fit A(v) = A_{0} + cv^{p} "
           "(ϑ = 1, n = 3/2, ε = 3 × 10^{−3}).", widths=[0.35, 0.45, 0.7, 0.7, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.85], size=7, label="flow")
 FIG("fig4_flow_reactor.png", "(a) Steady-state curve of the flow reactor at ψ = 20 (κ = 10) with stable (solid) and unstable (dashed) segments, the two folds (squares) and the Hopf-type point (circle). (b) Sweep loops "
-    "at two rates against the steady states. (c) Loop area against sweep rate, the power-law fit, and the attractor loop area.", "Three panels. (a) Steady conversion against ln D with solid stable and dashed unstable parts and marked fold and Hopf points. (b) Up and down sweep loops. (c) Loop area against sweep rate approaching the attractor loop area.", width=6.7)
+    "at two rates against the steady states. (c) Loop area against sweep rate, the power-law fit, and the attractor loop area.", "Three panels. (a) Steady conversion against ln D with solid stable and dashed unstable parts and marked fold and Hopf points. (b) Up and down sweep loops. (c) Loop area against sweep rate approaching the attractor loop area.")
 
 P("*Physical temperature path with Arrhenius kinetics.* To avoid the fixed-ψ approximation, the continuous-flow reactor was also simulated with both k_{1}(T) and k_{2}(T) Arrhenius (@T:par@), τ_{res} = τ_{th} = %.0f min "
   "(ϑ = 1), n = 3/2 and a wall temperature T_{∞} that is varied, so that ψ, ε and D change along the path. The steady states are obtained exactly (conversion balance solved for T at given α, T_{∞} = T − ΔT_{ad}ϑα/(1 + ϑ)) "
@@ -484,11 +494,11 @@ for dtad in (120.0, 160.0, 220.0):
     rows.append(["%.0f" % dtad, f2(an["fold_lower"]["Tinf"]), "%.2f, %.4f" % (an["fold_lower"]["psi"], an["fold_lower"]["eps"]), f2(an["fold_upper"]["Tinf"]), f2(wv["T_ext"]), wv["kind"], f1(wv["width_K"]), f1(AFC[dtad]["fk_estimate_width_K"] or 0.0)])
 TAB(rows, "Window of two stable states on a physical temperature path with Arrhenius kinetics (τ_{res} = τ_{th} = 3 min, n = 3/2): steady states exact, stability from the numerical Jacobian; the last column is the "
           "fixed-ψ exponential-model estimate at the local ψ and ε of the ignition fold, for comparison.", widths=[0.6, 0.9, 0.9, 0.9, 1.0, 0.5, 0.7, 0.9], size=7.5, label="arrflow")
-FIG("fig6_arrhenius_path.png", "(a) Steady states (solid: stable; dashed: unstable) and temperature ramps on the Arrhenius path (ΔT_{ad} = 220 K, τ_{res} = τ_{th} = 3 min); the dash-dot lines mark the stable window. "
+FIG("fig5_arrhenius_path.png", "(a) Steady states (solid: stable; dashed: unstable) and temperature ramps on the Arrhenius path (ΔT_{ad} = 220 K, τ_{res} = τ_{th} = 3 min); the dash-dot lines mark the stable window. "
     "(b) Value of ln D at which the sweep of the exponential model (ψ = 20, v = 0.001) leaves the upper branch, against the integrator tolerance, between the Hopf-type point and the upper fold.",
-    "Two panels. (a) Conversion against wall temperature with stable and unstable steady states and up and down temperature ramps. (b) Extinction value of ln D against integrator tolerance lying between the Hopf-type point and the upper fold.", width=6.4)
+    "Two panels. (a) Conversion against wall temperature with stable and unstable steady states and up and down temperature ramps. (b) Extinction value of ln D against integrator tolerance lying between the Hopf-type point and the upper fold.")
 
-HD("F. Closed forms as fitting functions: a synthetic-data test", 2)
+HD("3.6 Closed forms as fitting functions: a synthetic-data test", 2)
 P("With a known logistic width *w*_{0}, the storage curves depend on the capsule population only through the open fraction, i.e. through z = (T_{m} − T_{s})/σ_{eff} at each storage temperature, so the pair (T_{m}, σ) is "
   "determined only through the line z(T_{s}) = (T_{m} − T_{s})/σ_{eff}; an unknown *w*_{0} would add a third, confounded parameter. To see how well the pair can be recovered, synthetic isothermal storage curves were generated "
   "with the *population ODE* (not with the closed form) for σ = %.1f °C, T_{m} = %.0f °C and *w*_{0} = %.1f °C at three storage temperatures (%s °C) and five times (30–150 min), with Gaussian noise of %.3f in conversion, "
@@ -496,10 +506,10 @@ P("With a known logistic width *w*_{0}, the storage curves depend on the capsule
   "degenerate in this design, and σ̂ is biased high along the degenerate direction. An independent constraint on T_{m}, here a prior of %.1f °C (as from a calorimetric endotherm), markedly improved recovery in this tested design, "
   "to σ̂ = %.1f ± %.1f °C. Other temperatures, times or noise levels may also improve identifiability; no claim is made about real calorimetry." % (
       RC["true_sigma"], RC["true_Tm"], RC["w0"], ", ".join("%.0f" % t for t in RC["temps"]), RC["noise"], RC["n_trials"], RC["sigma_mean"], RC["sigma_sd"], RC["Tm_mean"], RC["Tm_sd"], RC["corr"], RP["Tm_prior_sd"], RP["sigma_mean"], RP["sigma_sd"]))
-FIG("fig5_recovery.png", "Least-squares recovery of (T_{m}, σ) from noisy synthetic storage curves; each point is one noise realization (every fifth shown).", "Scatter of recovered mean melting temperature and spread, elongated along a degenerate direction around the true value.", width=3.6)
+FIG("fig6_recovery.png", "Least-squares recovery of (T_{m}, σ) from noisy synthetic storage curves; each point is one noise realization (every fifth shown).", "Scatter of recovered mean melting temperature and spread, elongated along a degenerate direction around the true value.", width=3.3)
 
 # ================================================================== IV status
-HD("IV. Status of the claims and approximations")
+HD("4 Status of the claims and approximations")
 rows = [["Result", "Status", "Assumption it rests on", "Where it fails or is untested"],
         ["Availability clock (Prop. 1)", "Exact", "Constant temperature; α(0) = 0, C_{i}(0) = 0; one availability function ⟨C⟩(t)", "Temperature transients and exotherm; the delay is conversion dependent (Eq. (@edelay@)), and incomplete activation changes the clock"],
         ["Isothermal time and sharpness (Prop. 2)", "Exact (quadrature); n = 1 closed form; sharpness law asymptotic", "m = 1; no diffusion control", "Sharpness law only for n = 1 and b ≫ 9a; vitrification not modelled"],
@@ -509,13 +519,13 @@ rows = [["Result", "Status", "Assumption it rests on", "Where it fails or is unt
         ["Flow reactor multiplicity (Prop. 5)", "Exact for the stated model", "Perfect mixing; exponential model; ungated; ϑ, ψ fixed", "Real reactors: finite mixing time, wall–fluid temperature difference"],
         ["Flow reactor stability", "Jacobian exact; stable window computed; checked by simulation; Hopf character numerical", "As above", "Hopf-type point studied for ψ = 20 only (subcritical bifurcation indicated numerically, no Lyapunov coefficient); convergence of sweep loops to the attractor loop area unconfirmed (noise dependent)"],
         ["Temperature path (Arrhenius)", "Steady states exact; stability numerical", "τ_{res} = τ_{th} = 3 min, n = 3/2, ΔT_{ad} = 120, 160, 220 K", "Other τ, ϑ, ΔT_{ad} not scanned; sweeps not converged"],
-        ["Parameter recovery (III F)", "Numerical experiment", "Gaussian noise; population ODE as truth; known *w*_{0}", "Not a test on real calorimetry"]]
+        ["Parameter recovery (Section 3.6)", "Numerical experiment", "Gaussian noise; population ODE as truth; known *w*_{0}", "Not a test on real calorimetry"]]
 TAB(rows, "Status of the principal results, their assumptions, and where they fail or have not been tested. All parameters are illustrative.", widths=[1.5, 1.5, 1.8, 2.0], size=8, label="status")
 P("Three approximations carry the paper: the lumped, well-mixed energy balance; the exponential linearization of the Arrhenius law near the fold; and the Gaussian, independent-capsule description of the "
   "population. The first is a deliberate scope limit and the second is quantified (@T:arr@); the third is tested only against population equations that use the same description.")
 
 # ================================================================== V signatures
-HD("V. Falsifiable signatures")
+HD("5 Falsifiable signatures")
 P("Each proposition predicts a measurement that a standard calorimetric or rheological experiment can make; none has been made here. (1) *Availability clock.* Isothermal DSC at several temperatures above the melting "
   "endotherm, comparing the gated resin with the same resin with the catalyst dissolved, should give a delay that depends on conversion as Eq. (@edelay@) and approaches τ_{rel}(T) at late conversion; a conversion-dependent "
   "delay does not falsify the single-availability-function description, which predicts it. What would falsify it is a failure of the measured gated curves, replotted on the integrated-availability clock (measured "
@@ -527,16 +537,16 @@ P("Each proposition predicts a measurement that a standard calorimetric or rheol
   "rate dependent and not bistability. Where the upper state is lost at a Hopf-type point the extinction temperature is expected to lie between the Hopf-type point and the upper fold and to depend on the noise level of the "
   "experiment, so a single extinction temperature should not be predicted there. A sweep of the flow rate at fixed temperature is a different path (ϑ changes) and is not covered by the analysis.")
 
-HD("VI. Open problems")
+HD("6 Open problems")
 P("(a) *Spatial extension.* The lumped balance replaces the classical slab, cylinder or sphere. The critical Frank-Kamenetskii parameter of a consuming, autocatalytic source in a spatially resolved specimen, and its "
   "relation to Π_{c} above, are open. (b) *Finite-Θ correction.* The upward shift of Π_{c} with Θ is computed numerically; a closed-form first correction would complete Proposition 4. (c) *Hopf-type point and slow passage.* "
   "The first Lyapunov coefficient, the unstable cycle, and an analysis of the slow passage (noise-limited delay) that would predict the limit of the sweep loops were not attempted; the sub- or supercritical character was probed only for ψ = 20. (d) *Non-Gaussian populations.* Proposition 3 "
   "needs only the lower tail of the melting-temperature distribution; skewed and bimodal distributions, and capsule–capsule heat exchange, are untested. (e) *Diffusion control and vitrification.* These stop the cure before "
   "completion and change the late-time tail of Proposition 2. (f) *Noise.* In small specimens or flow channels the fold may be crossed by fluctuations. (g) *Experiment.* The propositions are untested on a real encapsulated "
-  "system; the signatures of Section V are the proposed tests.")
+  "system; the signatures of Section 5 are the proposed tests.")
 
 # ================================================================== VII conclusion
-HD("VII. Conclusion")
+HD("7 Conclusion")
 P("For the lumped model of a melt-gated autocatalytic cure, several statements can be made exactly or in closed form. The gated cure at constant temperature is the isothermal cure on the clock of integrated availability, and "
   "the delay of a fully open population is τ_{rel}[1 − exp(−t/τ_{rel})] (Proposition 1). The isothermal cure time is exact by quadrature, and the n = 1 sharpness is a logarithm of the rate-constant ratio (Proposition 2). The storage "
   "conversion of a Gaussian capsule population is (a/b)[exp(b f t_{eff}) − 1], which inverts into a bound on the melting-temperature spread (Proposition 3). The frozen-conversion thermal balance has a critical number "
@@ -544,20 +554,23 @@ P("For the lumped model of a melt-gated autocatalytic cure, several statements c
   "at a Hopf-type point before its fold, so the hysteresis window and its loop area must be computed from the stable states, and sweep loops through that point depend on noise (Proposition 5). All results are tested against the full equations; none is tested against "
   "experiment, and the parameters are illustrative.")
 
-HD("Declarations")
-P("**Funding.** The author received no funding for this work.")
-P("**Competing interests.** The author declares no competing interests.")
-P("**Author contributions.** Leon Sandler: conceptualization, methodology, software, formal analysis, investigation, writing – original draft, writing – review and editing, visualization.")
-P("**Use of artificial intelligence.** Claude Sonnet 5.5 (Anthropic) was used for derivations, code, figures and drafting as described in Section II C; the author is responsible for the content.")
-P("**Data availability.** The model code, the closed-form module, the tests, the figure scripts, the results file (results.json) and the manuscript builder are available at %s (release %s) and archived on Zenodo "
+HD("Statements and Declarations")
+P("**Funding.** No funds, grants, or other support was received.")
+P("**Competing interests.** The author has no relevant financial or non-financial interests to disclose.")
+P("**Author contributions.** Conceptualization: Leon Sandler; Methodology: Leon Sandler; Software: Leon Sandler; Formal analysis and investigation: Leon Sandler; Writing – original draft preparation: Leon Sandler; "
+  "Writing – review and editing: Leon Sandler; Visualization: Leon Sandler.")
+P("**Ethics approval.** Not applicable.")
+P("**Related work.** A related numerical study by the author [[sandler2026,sandler2026b]] is posted as a preprint and has been submitted elsewhere; the relationship is described in Section 1.1.")
+P("**Use of artificial intelligence.** Claude Sonnet 5.5 (Anthropic) was used for derivations, code, figures and drafting as described in Section 2.3; the author is responsible for the content.")
+P("**Data and code availability.** The model code, the closed-form module, the tests, the figure scripts, the results file (results.json) and the manuscript builder are available at %s (release %s) and archived on Zenodo "
   "at https://doi.org/%s; this manuscript is archived as a preprint at https://doi.org/%s." % (REPO, RELEASE, SW_DOI, PP_DOI))
 
 HD("Appendix A. Numerical protocol, tolerances and convergence")
-P("*Reference integrator.* Eqs. (@e1@)–(@e3@) are integrated for all scenarios at once with a vectorized fixed-step fourth-order Runge–Kutta scheme (step 0.01 min for Sections III A and III B, 0.05 min for the population "
-  "runs of III C; end time 150 min for storage, 300–600 min for cure times). Conversion is limited to [0, 1] and the reaction heat is ΔT_{ad} dα/dt without cut-off, so the energy balance is conserved: in the adiabatic limit the "
-  "integrated temperature rise equals ΔT_{ad}α to %.1e K (Section II, test_theory.py). Capsule populations use K = 801 deterministic Gaussian quantiles z_{i} = Φ^{−1}[(i − 1/2)/K]. Convergence: relative to K = 3201 the storage conversion "
+P("*Reference integrator.* Eqs. (@e1@)–(@e3@) are integrated for all scenarios at once with a vectorized fixed-step fourth-order Runge–Kutta scheme (step 0.01 min for Sections 3.1 and 3.2, 0.05 min for the population "
+  "runs of Section 3.3; end time 150 min for storage, 300–600 min for cure times). Conversion is limited to [0, 1] and the reaction heat is ΔT_{ad} dα/dt without cut-off, so the energy balance is conserved: in the adiabatic limit the "
+  "integrated temperature rise equals ΔT_{ad}α to %.1e K (Section 2, test_theory.py). Capsule populations use K = 801 deterministic Gaussian quantiles z_{i} = Φ^{−1}[(i − 1/2)/K]. Convergence: relative to K = 3201 the storage conversion "
   "at K = 801 differs by at most %.1e, and relative to step 0.0125 min the step 0.05 min differs by at most %.1e (@T:conv@; difference = value/reference − 1)." % (abs(R["energy"]["rise"] - R["energy"]["dTad_alpha"]), conv_K, conv_dt))
-P("*Adaptive integrations.* The exponential-model criticality problem is integrated with LSODA (rtol 10^{−9}, atol 10^{−13}, max step 0.02, end time 40/k_{2}); the Arrhenius criticality problem with LSODA (rtol 10^{−8}, atol 10^{−12}, "
+P("*Adaptive integrations.* The exponential-model criticality problem is integrated with LSODA (an adaptive stiff/non-stiff ODE solver; relative tolerance rtol 10^{−9}, absolute tolerance atol 10^{−13}, max step 0.02, end time 40/k_{2}); the Arrhenius criticality problem with LSODA (rtol 10^{−8}, atol 10^{−12}, "
   "end time 60/k_{2}, temperature floored at 200 K in the rate); the flow reactor with LSODA (rtol 10^{−8}, atol 10^{−12}, max step min(0.5, 0.02/v)); fixed-D attractor runs with LSODA (rtol 10^{−11}, atol 10^{−14}, end time 3000 "
   "residence times; the last 10 % is used to classify the state); constant-temperature delay checks with RK45 (rtol 10^{−12}).")
 P("*Noise and temperature-path studies.* The tolerance study uses LSODA with (rtol, atol) = (10^{−6}, 10^{−9}), (10^{−8}, 10^{−12}), (10^{−10}, 10^{−14}) and (10^{−12}, 10^{−16}) at v = 0.001; the basin radius is bisected (26 steps, bracket [10^{−6}, 0.5]) in the direction of −θ with end time 2500 residence times. The Arrhenius temperature path uses 4000 conversion points for the steady curve (brentq xtol 10^{−10} in T), a central-difference Jacobian, and LSODA ramps (rtol 10^{−8}, atol 10^{−10}, dwell 20 residence times, bounds from 15 K below the window to 15 K above it). "
@@ -591,19 +604,19 @@ TAB(rows, "Run table of the numerical studies; every result is reproduced by cod
 HD("References")
 for k in CITE:
     q = doc.add_paragraph()
-    H.add_rich(q, "[%d] %s" % (CITE.index(k) + 1, REFS[k]["entry"]), size=10)
+    H.add_rich(q, "%d. %s" % (CITE.index(k) + 1, REFS[k]["entry"]), size=10)
     q.paragraph_format.space_after = H.Pt(3)
 
 doc.core_properties.author = "Leon Sandler"
 doc.core_properties.title = TITLE
-outp = os.path.join(OUT, "Gated_Autocatalysis_Criticality_JCP.docx")
+outp = os.path.join(OUT, "Gated_Autocatalysis_Criticality_RKMC.docx")
 doc.save(outp)
 json.dump(TLAB_NEW, open(LABFILE, "w"))
 words = 0
 body = False
 for q in doc.paragraphs:
     t = q.text.strip()
-    if t.startswith("I. Introduction"):
+    if t.startswith("1 Introduction"):
         body = True
     if t == "References":
         body = False

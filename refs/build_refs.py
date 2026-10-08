@@ -20,11 +20,12 @@ DOIS = {
     "uppal1974": "10.1016/0009-2509(74)80089-8", "siepmann2012": "10.1016/j.jconrel.2011.10.006",
 }
 MANUAL = {
-    "frankkamenetskii1969": "Frank-Kamenetskii DA. Diffusion and Heat Transfer in Chemical Kinetics, 2nd ed. New York: Plenum Press; 1969.",
-    "grayscott1990": "Gray P, Scott SK. Chemical Oscillations and Instabilities: Non-linear Chemical Kinetics. Oxford: Clarendon Press; 1990.",
-    "strogatz2015": "Strogatz SH. Nonlinear Dynamics and Chaos, 2nd ed. Boulder: Westview Press; 2015.",
-    "sandler2026": "Sandler L. Coupled thermal activation and autocatalytic cure kinetics: a theoretical and computational study of delayed reactive transformation. "
-                   "ChemRxiv 2026. https://doi.org/10.26434/chemrxiv.15008366/v1; archived at https://doi.org/10.5281/zenodo.22073390",
+    "frankkamenetskii1969": "Frank-Kamenetskii DA (1969) Diffusion and heat transfer in chemical kinetics, 2nd edn. Plenum Press, New York",
+    "grayscott1990": "Gray P, Scott SK (1990) Chemical oscillations and instabilities: non-linear chemical kinetics. Clarendon Press, Oxford",
+    "strogatz2015": "Strogatz SH (2015) Nonlinear dynamics and chaos, 2nd edn. Westview Press, Boulder",
+    "sandler2026b": "Sandler L (2026) AutoLatch: coupled thermal activation and autocatalytic cure kinetics, version 3.1 (code and manuscript archive). Zenodo. https://doi.org/10.5281/zenodo.23202125",
+    "sandler2026": "Sandler L (2026) Coupled thermal activation and autocatalytic cure kinetics: a theoretical and computational study of delayed reactive transformation. "
+                   "ChemRxiv. https://doi.org/10.26434/chemrxiv.15008366/v1 (archived at https://doi.org/10.5281/zenodo.22073390)",
 }
 
 
@@ -39,6 +40,7 @@ def initials(given):
 
 
 def fmt(m, doi):
+    """Springer (numbered) style: Authors (Year) Title. Journal vol:pages. https://doi.org/..."""
     au = m.get("author", [])
     names = ["%s %s" % (a.get("family", ""), initials(a.get("given", ""))) for a in au if a.get("family")]
     names = names if len(names) <= 6 else names[:6] + ["et al"]
@@ -47,12 +49,8 @@ def fmt(m, doi):
     j = html.unescape(html.unescape(j)).replace(".", "").replace("  ", " ").strip()
     year = (m.get("issued", {}).get("date-parts") or [[None]])[0][0]
     vol, page = m.get("volume"), m.get("page")
-    tail = "%s %s" % (j, year)
-    if vol:
-        tail = "%s. %s;%s" % (j, year, vol) + (":%s" % page.replace("-", "–") if page else "")
-    else:
-        tail = "%s. %s" % (j, year)
-    return "%s. %s. %s. https://doi.org/%s" % (", ".join(names), title, tail, doi)
+    tail = j + ((" %s" % vol) if vol else "") + ((":%s" % page) if page else "")
+    return "%s (%s) %s. %s. https://doi.org/%s" % (", ".join(names), year, title, tail, doi)
 
 
 def main():

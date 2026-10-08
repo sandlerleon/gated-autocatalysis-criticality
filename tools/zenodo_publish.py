@@ -2,7 +2,7 @@
 """Publish the two Zenodo records reserved by zenodo_reserve.py:
 
   software     the tagged GitHub release as a zip (MIT)
-  preprint     the manuscript (docx and pdf) (CC BY 4.0)
+  preprint     the manuscript (docx only; no PDFs are deposited) (CC BY 4.0)
 
 The DOIs were reserved first so that they could be written into the manuscript. The token is read from ZENODO_TOKEN and never written to disk.
 
@@ -33,14 +33,14 @@ TITLE_CODE = "Gated autocatalytic cure: closed-form theory, reference model, tes
 KEYWORDS = ["autocatalytic cure kinetics", "thermal runaway", "encapsulated catalyst", "Lambert W function", "saddle-node bifurcation", "hysteresis",
             "Kamal-Sourour kinetics", "Semenov criticality", "design rule", "theory"]
 
-ABOUT = """<p><strong>A theoretical paper. No experimental data are used and all parameters are illustrative.</strong> Prepared for submission to <em>The Journal of Chemical Physics</em>.
+ABOUT = """<p><strong>A theoretical paper. No experimental data are used and all parameters are illustrative.</strong> Prepared for submission to <em>Reaction Kinetics, Mechanisms and Catalysis</em> (Springer).
 For a cure triggered by the melting of an encapsulated catalyst (distribution of capsule melting temperatures, Kamal-Sourour autocatalytic kinetics, exothermic feedback), the lumped model
 is largely solvable in closed form: the gated cure is the isothermal cure on the clock of integrated catalyst availability; the isothermal cure time is exact by quadrature and its sharpness
 is logarithmic in the rate-constant ratio; the storage conversion of a Gaussian capsule population gives a closed-form design rule for the admissible melting-temperature spread; thermal
 feedback has a critical number e^-1 (1+n)^(1+n)/n^n with Lambert-W overshoot and an Arrhenius correction exp(1/Ar); and a continuous-flow reactor shows ignition-extinction hysteresis
 whose static loop area is the zero-sweep-rate limit of the dynamic loops. Every result is tested against the full equations. The parameter set and capsule-population picture come from an earlier
 numerical preprint of the author (doi 10.5281/zenodo.22073390).</p>"""
-NEWVER = "<p><strong>Version %s.</strong> Revised after two independent readiness reviews: a physical Arrhenius temperature path replaces the fixed-psi kelvin claim; the Hopf-type point is verified (frequency, transversality, basin radius) and the convergence of sweep loops to the attractor loop area is stated as unconfirmed (noise-controlled exit); a provenance table separates established theory from new results; 41 checks. Earlier changes:  the flow-reactor section now analyzes stability (the upper steady branch can lose stability at a Hopf-type point before its fold, so the window of two stable states, the attractor loop area and the sweep convergence are recomputed); the delay of the gated cure is conversion dependent (tau_rel [1 - exp(-t/tau_rel)]); the storage bound is stated in exact closed form with its domain; the thermal-criticality statement is limited to the frozen-conversion fold with a finite-epsilon formula, and the Arrhenius correction is an empirical approximation; the energy balance is conserved exactly; convergence studies, solver settings and pinned versions are reported; the AI-assistance statement names the tool and version.</p>"
+NEWVER = "<p><strong>Version %s.</strong> Retargeted to Reaction Kinetics, Mechanisms and Catalysis (Springer style: numbered sections, 244-word abstract, highlights, declarations, Springer reference style, restyled figures); new subsection 1.1 states the relation to the author's earlier numerical preprint and its journal submission, and the provenance table separates what is reused from what is new; language edits from a Rubriq pass were merged selectively. Earlier version 1.2.0 (JCP target): revised after two independent readiness reviews: a physical Arrhenius temperature path replaces the fixed-psi kelvin claim; the Hopf-type point is verified (frequency, transversality, basin radius) and the convergence of sweep loops to the attractor loop area is stated as unconfirmed (noise-controlled exit); a provenance table separates established theory from new results; 41 checks. Earlier changes:  the flow-reactor section now analyzes stability (the upper steady branch can lose stability at a Hopf-type point before its fold, so the window of two stable states, the attractor loop area and the sweep convergence are recomputed); the delay of the gated cure is conversion dependent (tau_rel [1 - exp(-t/tau_rel)]); the storage bound is stated in exact closed form with its domain; the thermal-criticality statement is limited to the frozen-conversion fold with a finite-epsilon formula, and the Arrhenius correction is an empirical approximation; the energy balance is conserved exactly; convergence studies, solver settings and pinned versions are reported; the AI-assistance statement names the tool and version.</p>"
 DESC_CODE = ABOUT + """<p>Contents: closed forms (<code>code/theory.py</code>), reference model and numerics, tests, the script that produces every result table, figure scripts, the
 reference harvest (Crossref), the manuscript builder. Manuscript preprint: <a href="https://doi.org/{PP}">{PP}</a>.</p>"""
 DESC_PAPER = ABOUT + """<p>Code and results: <a href="%s">%s</a>, archived at <a href="https://doi.org/{SW}">{SW}</a>.</p>""" % (GITHUB, GITHUB)
@@ -105,7 +105,7 @@ def preprint():
     d = st["publication_v" + MS] if "publication_v" + MS in st else st["publication"]
     print("=== preprint draft %s (reserved DOI %s)" % (d["id"], d["doi"]))
     clear_inherited(d)
-    for name in ("Gated_Autocatalysis_Criticality_JCP.docx", "Gated_Autocatalysis_Criticality_JCP.pdf"):
+    for name in ("Gated_Autocatalysis_Criticality_RKMC.docx",):
         upload(d["bucket"], os.path.join(REPO, "manuscript", name), name)
     meta = {"title": TITLE_PAPER, "upload_type": "publication", "publication_type": "preprint",
             "description": (NEWVER % ("v" + MS) if MS != "1" else "") + DESC_PAPER.replace("{SW}", st.get("software_" + VERSION, st["software"])["doi"]), "creators": CREATORS, "keywords": KEYWORDS, "access_right": "open",

@@ -1,7 +1,7 @@
 # Closed-form storage stability, induction delay and thermal-feedback criticality of melt-gated autocatalytic cure
 
 **Author:** Leon Sandler, Independent Researcher (ORCID [0009-0007-4584-808X](https://orcid.org/0009-0007-4584-808X))
-**Target journal:** The Journal of Chemical Physics (Regular Article; Polymers and Soft Matter / Theoretical Methods and Algorithms)
+**Target journal:** Reaction Kinetics, Mechanisms and Catalysis (Springer; original article)
 **Article type:** theory. All parameters are illustrative; nothing is fitted to experiment.
 
 A cure reaction triggered by the melting of an encapsulated catalyst combines a distribution of capsule melting temperatures, autocatalytic (Kamal-Sourour) kinetics and exothermic feedback.
@@ -22,10 +22,10 @@ code/theory.py          the closed forms (pure functions)
 code/core.py            reference model: vectorised RK4 of the T-C-alpha system with a capsule population
 code/numerics.py        adaptive stiff integrations for the criticality and flow-reactor results
 code/run_all.py         every result table -> results.json (about 6 minutes)
-code/figures.py         Figures 1-5 (and figures_extra.py: Figure 6, Arrhenius temperature path and noise dependence of the exit)
+code/figures.py         Figures 1-6 (PNG and EPS, Springer style; Figure 5 Arrhenius temperature path and noise dependence of the exit)
 code/test_theory.py     41 checks of the closed forms, the stability analysis and the temperature path against the numerics (about 2 minutes)
 refs/build_refs.py      every journal reference harvested from Crossref
-manuscript/             builder (reads results.json) and the manuscript
+manuscript/             builders (read results.json), the manuscript and cover letter (docx only; no PDFs are kept in the repository), Rubriq merge tools
 tools/                  Zenodo reservation/publication scripts (token from ZENODO_TOKEN, never stored)
 ```
 
@@ -36,7 +36,6 @@ pip install -r requirements.txt
 python code/test_theory.py
 python code/run_all.py
 python code/figures.py
-python code/figures_extra.py
 cd manuscript && python build_manuscript.py && python build_manuscript.py
 ```
 
@@ -53,3 +52,7 @@ No experiment was performed or fitted. The model is lumped, ignores diffusion co
 ## Citation
 
 Software: [10.5281/zenodo.23201763](https://doi.org/10.5281/zenodo.23201763) (concept DOI 10.5281/zenodo.23201762). Manuscript preprint: [10.5281/zenodo.23201767](https://doi.org/10.5281/zenodo.23201767) (concept DOI 10.5281/zenodo.23201766). MIT licence (code); CC BY 4.0 (manuscript).
+
+## v1.3.0
+
+Retargeted to *Reaction Kinetics, Mechanisms and Catalysis*: Springer numbering and declarations, 244-word abstract and highlights, Springer reference style, restyled figures (no in-figure titles), new Section 1.1 on the relation to the author's earlier AutoLatch preprint and journal submission, selective merge of a Rubriq language edit (`manuscript/merge_rubriq*.py`). The numerical results are unchanged from v1.2.0 (`results.json` identical).
