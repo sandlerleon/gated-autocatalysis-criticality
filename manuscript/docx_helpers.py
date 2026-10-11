@@ -76,33 +76,109 @@ def page_numbers_and_line_numbers(doc, line_numbers=True):
 TOK = re.compile(r"(\*\*.+?\*\*|\*.+?\*|_\{.+?\}|\^\{.+?\})")   # braced sub/superscripts only: file names like run_analysis.py stay intact
 
 
+# ACS / IUPAC convention for symbols in running text: letters that stand for quantities (Latin and Greek) are italic;
+# units, numbers, function names, the constants e and pi, the difference operator and descriptive subscripts are upright.
+AUTO_MATH = True
+GREEK_ITALIC = set("αβγεζηθϑικλνξρστυφχψωΘΠΦΛΨΩΣ")      # Δ (difference operator) and π (constant) stay upright
+LATIN_TOKEN = re.compile(r"(?<![A-Za-z0-9’'])([A-Za-z])(?![A-Za-z’'])")
+PRODUCTS = ("bx", "Ar")                                    # adjacent variables written as a product
+SUB_ITALIC = set("ijk")                             # subscript letters that are indices, not descriptive labels
+
+
+def _auto_runs(text):
+    """Split plain text into (string, italic) pieces following the convention above."""
+    if not AUTO_MATH or not text:
+        return [(text, False)]
+    flags = [False] * len(text)
+    for i, ch in enumerate(text):
+        if ch in GREEK_ITALIC:
+            flags[i] = True
+    for m in LATIN_TOKEN.finditer(text):
+        i = m.start()
+        ch = m.group(1)
+        if ch == "e":
+            continue
+        prev = text[i - 1] if i else " "
+        before = text[:i].rstrip()
+        pn = before[-1] if before else ""
+        rest = text[i + 1:].lstrip()
+        nn = rest[0] if rest else ""
+        if pn in "0123456789" and pn or pn == "°":                  # "24 K", "°C": units
+            continue
+        if ch.islower() and prev == "(" and nn == ")" and (i < 2 or text[i - 2] in "  .;:,"):   # panel label (a)
+            continue
+        if text[i:i + 4] in ("i.e.", "e.g.") or text[max(0, i - 2):i + 2] in ("i.e.", "e.g."):
+            continue
+        if prev == "(" and nn == ")" and ch in "KCJ":                    # unit in parentheses, e.g. (K)
+            continue
+        if ch in "aAI":                                       # articles and appendix labels unless clearly a variable
+            math = nn in "=<>≈≪≫≤≥" or pn in "+−×/(" and nn in "+−×/)"
+            if not math:
+                continue
+        flags[i] = True
+    for pr in PRODUCTS:
+        for m in re.finditer(r"(?<![A-Za-z])%s(?![A-Za-z])" % pr, text):
+            for k in range(m.start(), m.end()):
+                flags[k] = True
+    out, cur, curf = [], "", flags[0]
+    for ch, f in zip(text, flags):
+        if f != curf:
+            out.append((cur, curf)); cur, curf = "", f
+        cur += ch
+    out.append((cur, curf))
+    return out
+
+
+def _sub_italic(s):
+    """Italic only for index/variable letters inside a sub- or superscript."""
+    if len(s) == 1 and s in SUB_ITALIC:
+        return [(s, True)]
+    out = []
+    for ch in s:
+        out.append((ch, ch in GREEK_ITALIC or (ch == "n" and len(s) > 1 and not s.isalpha())))
+    return out
+
+
 def add_rich(par, text, size=None, bold=None, italic=None, color=None):
     for piece in TOK.split(text):
         if not piece:
             continue
-        r = None
+        items = None
+        script = None
         if piece.startswith("**") and piece.endswith("**") and len(piece) > 4:
-            r = par.add_run(piece[2:-2]); r.bold = True
+            items = _auto_runs(piece[2:-2]); b_ = True
         elif piece.startswith("*") and piece.endswith("*") and len(piece) > 2:
-            r = par.add_run(piece[1:-1]); r.italic = True
+            items = [(piece[1:-1], True)]; b_ = False
         elif piece.startswith("_{") and piece.endswith("}"):
-            r = par.add_run(piece[2:-1]); r.font.subscript = True
+            items = _sub_italic(piece[2:-1]) if AUTO_MATH else [(piece[2:-1], False)]; script = "sub"; b_ = False
         elif piece.startswith("^{") and piece.endswith("}"):
-            r = par.add_run(piece[2:-1]); r.font.superscript = True
+            items = _sub_italic(piece[2:-1]) if AUTO_MATH else [(piece[2:-1], False)]; script = "sup"; b_ = False
         elif piece.startswith("_") and len(piece) == 2:
-            r = par.add_run(piece[1]); r.font.subscript = True
+            items = [(piece[1], False)]; script = "sub"; b_ = False
         elif piece.startswith("^") and len(piece) == 2:
-            r = par.add_run(piece[1]); r.font.superscript = True
+            items = [(piece[1], False)]; script = "sup"; b_ = False
         else:
-            r = par.add_run(piece)
-        if size:
-            r.font.size = Pt(size)
-        if bold is not None and not r.bold:
-            r.bold = bold
-        if italic is not None and not r.italic:
-            r.italic = italic
-        if color is not None:
-            r.font.color.rgb = color
+            items = _auto_runs(piece); b_ = False
+        for txt, it in items:
+            if not txt:
+                continue
+            r = par.add_run(txt)
+            if b_:
+                r.bold = True
+            if it:
+                r.italic = True
+            if script == "sub":
+                r.font.subscript = True
+            elif script == "sup":
+                r.font.superscript = True
+            if size:
+                r.font.size = Pt(size)
+            if bold is not None and not r.bold:
+                r.bold = bold
+            if italic is not None and not r.italic:
+                r.italic = italic
+            if color is not None:
+                r.font.color.rgb = color
     return par
 
 
@@ -190,8 +266,6 @@ def table(doc, rows, widths=None, header=True, size=8.5, align_first_left=True):
             p.paragraph_format.line_spacing = 1.0
             p.paragraph_format.space_after = Pt(1)
             add_rich(p, txt, size=size, bold=True if (header and i == 0) else None)
-            if header and i == 0:
-                set_cell_shade(c, "E7ECF1")
             if widths:
                 c.width = Inches(widths[j])
     if header:

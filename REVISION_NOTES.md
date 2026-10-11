@@ -41,3 +41,15 @@ Things the review asked for that remain open: a real-data comparison; the unstab
 | Numerical convergence | Storage and design-rule comparisons rerun with K = 3201 quantiles; convergence study extended to K = 3201 against a K = 6401 reference (discretization error at K = 3201 is 4.9e-4 at sigma = 2 C, against 1.1e-2 at K = 801); Appendix A separates discretization error from formula error. Design-rule agreement remains within 3 %. |
 | Duplicated 'Table Table' | Fixed in Section 5 and Appendix A. |
 | Ungated scope of Propositions 4 and 5 | Stated in abstract, conclusion, a new open problem (g) and the cover letter. |
+
+
+## Pre-review revision for RKMC (editor's four points, 11 October 2026)
+
+| Editor's point | What was done |
+|---|---|
+| Figures 3a, 4c and 5b: lines joining computed points | The three connecting lines were removed: those panels now show markers only. Lines remain only where they are a closed form, a fit or a computed steady-state curve. Captions state that points are numerical integrations and are not joined; Fig. 3 also states that no experimental data are shown. |
+| Abstract | The introductory sentence on the topic was deleted; the abstract now begins with the results (229 words). |
+| No shading | The shaded table header row was removed; every table and the whole document use a plain white background. |
+| Symbol formatting (ACS math stylesheet) | Quantities (Latin and Greek letters) are italic in text, tables, captions and equations; units (K, °C), numbers, function names (ln, exp), the constants e and pi, the difference operator, the derivative d, and descriptive subscripts and superscripts (rel, gated, c, FK) are upright; subscripts that are indices (i, j, k) are italic. Axis labels and legends in the figures use italic variables as well. Reference list unchanged. |
+
+No number, equation or conclusion changed; results.json is unchanged.

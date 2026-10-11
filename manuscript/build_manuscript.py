@@ -181,8 +181,7 @@ for line in ("Leon Sandler", "Independent researcher, Northbrook, Illinois, USA"
 doc.add_paragraph()
 HD("Abstract")
 awin = AFC[220.0]["analysis"]["window"]["width_K"]
-ABS = ("A cure triggered by the melting of an encapsulated catalyst combines a spread of capsule melting temperatures, autocatalytic kinetics and heat release that feeds back on the temperature. "
-       "We derive closed-form results for a lumped model and test each against the full equations. "
+ABS = ("We derive closed-form results for a lumped model of a cure triggered by the melting of an encapsulated catalyst, and test each against the full equations. "
        "At constant temperature the gated cure equals the ungated cure evaluated on the cumulative amount of catalyst released, so the gate delay grows with conversion and approaches the "
        "release time constant only late in the cure. The storage conversion of a Gaussian population of capsules follows from the fraction of capsules that are open, which bounds the spread of "
        "melting temperatures to within %s %% of the full equations. For a fully released catalyst, the thermal balance at fixed conversion has a critical value of the product of the reduced exothermicity and the "
@@ -247,13 +246,13 @@ TAB(rows, "Provenance of the results: what follows from established theory and w
 HD("2 Model and scaling")
 HD("2.1 Equations", 2)
 P("The conversion α of the resin obeys, in the rate equations (ordinary differential equations, ODEs) below, a Kamal–Sourour law with reaction order n for the unreacted fraction and first order in the autocatalytic term,")
-EQ(FRAC(V("dα"), V("dt")) + EQS + AVC + Tt("(t)") + DEL(sv("k", "1") + PLUS + sv("k", "2") + V("α")) + SUPN(DEL(Tt("1") + MINUS + V("α")), V("n")) + Tt(","), "e1")
+EQ(FRAC(Tt("d") + V("α"), Tt("d") + V("t")) + EQS + AVC + Tt("(") + V("t") + Tt(")") + DEL(sv("k", "1") + PLUS + sv("k", "2") + V("α")) + SUPN(DEL(Tt("1") + MINUS + V("α")), V("n")) + Tt(","), "e1")
 P("where ⟨C⟩ is the availability of the catalyst averaged over the capsule population (the fraction of the catalyst that has been released, 0 ≤ ⟨C⟩ ≤ 1). The temperature "
   "of the well-mixed specimen obeys a lumped energy balance with Newtonian loss and the adiabatic temperature rise ΔT_{ad} of the reaction,")
-EQ(FRAC(V("dT"), V("dt")) + EQS + FRAC(DEL(sv("T", "∞") + MINUS + V("T")), sv("τ", "th")) + PLUS + sv("ΔT", "ad") + FRAC(V("dα"), V("dt")) + Tt("."), "e2")
+EQ(FRAC(V("dT"), Tt("d") + V("t")) + EQS + FRAC(DEL(sv("T", "∞") + MINUS + V("T")), sv("τ", "th")) + PLUS + sv("ΔT", "ad") + FRAC(Tt("d") + V("α"), Tt("d") + V("t")) + Tt("."), "e2")
 P("Capsule *i* has a melting temperature T_{m,i}, drawn from a Gaussian of mean T_{m} and standard deviation σ, and releases its catalyst by first-order relaxation toward a "
   "logistic activation of width *w*_{0},")
-EQ(FRAC(SUBN(V("dC"), V("i")), V("dt")) + EQS + sv("k", "rel") + DEL(V("T")) + DEL(SUBN(V("G"), V("i")) + DEL(V("T")) + MINUS + SUBN(V("C"), V("i")), "[", "]") + Tt(",   ") +
+EQ(FRAC(SUBN(V("dC"), V("i")), Tt("d") + V("t")) + EQS + sv("k", "rel") + DEL(V("T")) + DEL(SUBN(V("G"), V("i")) + DEL(V("T")) + MINUS + SUBN(V("C"), V("i")), "[", "]") + Tt(",   ") +
    SUBN(V("G"), V("i")) + EQS + SUPN(DEL(Tt("1") + PLUS + Tt("exp") + DEL(MINUS + FRAC(V("T") + MINUS + SUBN(V("T"), V("m,i")), sv("w", "0")))), Tt("−1")) + Tt(",   ") + AVC + EQS +
    FRAC(Tt("1"), V("K")) + Tt("∑") + SUBN(V("C"), V("i")) + Tt("."), "e3")
 P("The initial state is α(0) = 0 and C_{i}(0) = 0 unless stated, and T(0) = T_{∞} for the isothermal-start problems of Sections 3.1–3.4. The rate constants are Arrhenius, *k*_{j} = *A*_{j} exp(−*E*_{j}/*RT*), "
@@ -271,7 +270,7 @@ TAB(rows, "Illustrative parameter set (not fitted to any material; taken from Re
 HD("2.2 Dimensionless groups and the exponential comparison model", 2)
 P("Define ε = k_{1}/k_{2}, the thermal number Θ = τ_{th}k_{2}(T_{∞}), the reduced exothermicity ψ = ΔT_{ad}E_{2}/(RT_{∞}^{2}), the activation number Ar = E_{2}/(RT_{∞}) and the release "
   "number Λ = k_{2}/k_{rel}. The combination that controls thermal feedback is")
-EQ(Tt("Π") + EQS + Tt("ψ") + Tt("Θ") + EQS + FRAC(sv("ΔT", "ad") + sv("E", "2") + sv("τ", "th") + sv("k", "2"), V("R") + SUPN(sv("T", "∞"), Tt("2"))) + Tt("."), "ePi")
+EQ(V("Π") + EQS + V("ψ") + V("Θ") + EQS + FRAC(sv("ΔT", "ad") + sv("E", "2") + sv("τ", "th") + sv("k", "2"), V("R") + SUPN(sv("T", "∞"), Tt("2"))) + Tt("."), "ePi")
 P("The *exponential comparison model* used in Sections 3.4 and 3.5 replaces the Arrhenius dependence of both rate constants by the common Frank-Kamenetskii (FK) form k_{j}(T) = k_{j}(T_{∞}) exp(ψθ), "
   "θ = (T − T_{∞})/ΔT_{ad}, and treats ε as a constant. This is exact when the activation energies are equal and is a good description of the rate near the fold when the background term is "
   "negligible there: the fold occurs at conversions of order 0.4, where the autocatalytic term (α ≈ 0.4) exceeds the background term (ε = 3 × 10^{−3}) by two orders of magnitude, so the "
@@ -289,7 +288,7 @@ P("All numerical results are produced by the released scripts (run_all.py writes
 HD("3 Results")
 HD("3.1 Proposition 1: the gated cure runs on the clock of integrated availability", 2)
 P("**Proposition 1.** At constant temperature, with α(0) = 0 and C_{i}(0) = 0, let F(α) = (k_{1} + k_{2}α)(1 − α)^{n}. Then the gated conversion obeys")
-EQ(SUBSUP(Tt("∫"), Tt("0"), V("α")) + FRAC(V("dx"), V("F") + DEL(V("x"))) + EQS + V("s") + DEL(V("t")) + Tt(",   ") + V("s") + DEL(V("t")) + EQS + SUBSUP(Tt("∫"), Tt("0"), V("t")) + AVC + DEL(V("t′")) + V("dt′") + Tt("."), "eclock")
+EQ(SUBSUP(Tt("∫"), Tt("0"), V("α")) + FRAC(Tt("d") + V("x"), V("F") + DEL(V("x"))) + EQS + V("s") + DEL(V("t")) + Tt(",   ") + V("s") + DEL(V("t")) + EQS + SUBSUP(Tt("∫"), Tt("0"), V("t")) + AVC + DEL(V("t′")) + Tt("d") + V("t′") + Tt("."), "eclock")
 P("*Proof.* With T constant, dα/dt = ⟨C⟩(t)F(α) is separable: dα/F(α) = ⟨C⟩dt. Integration from the initial state gives the identity. ∎ This is the generalized-time identity [[ozawa1965]] with the "
   "integrated availability as the clock. The left side is the isothermal time t_{iso}(α) of the ungated resin, so the gated time to reach α is the time at which s(t) = t_{iso}(α). For a "
   "population that is fully open at the operating temperature, ⟨C⟩ = 1 − exp(−t/τ_{rel}) with τ_{rel} = 1/k_{rel}, so s(t) = t − τ_{rel}[1 − exp(−t/τ_{rel})] and")
@@ -360,10 +359,10 @@ FIG("fig2_storage.png", "(a) Closed-form storage conversion Eq. (@eleak@) agains
 HD("3.4 Proposition 4: thermal-feedback criticality, overshoot, and Arrhenius correction", 2)
 P("When the thermal time constant is short compared with the reaction time (Θ ≪ 1), the temperature rise θ = (T − T_{∞})/ΔT_{ad} of the exponential comparison model follows the reaction quasi-statically with the "
   "conversion frozen, θ = Θ r(α) exp(ψθ), where r(α) = (ε + α)(1 − α)^{n} is the isothermal rate in units of k_{2}. Multiplying by ψ gives ψθ exp(−ψθ) = Πr, whose solution, if Πr ≤ 1/e, is")
-EQ(V("ψθ") + EQS + MINUS + sv("W", "0") + DEL(MINUS + Tt("Π") + V("r") + DEL(V("α"))) + Tt("."), "eW")
+EQ(V("ψθ") + EQS + MINUS + sv("W", "0") + DEL(MINUS + V("Π") + V("r") + DEL(V("α"))) + Tt("."), "eW")
 P("**Proposition 4.** For the ungated exponential model in the quasi-steady limit with frozen conversion, the low-temperature algebraic branch of Eq. (@eW@) ceases to exist when Πr(α) = 1/e. Maximizing r over α gives "
   "the limiting fold criterion. For r = (ε + α)(1 − α)^{n} the interior maximum is at α^{*} = (1 − nε)/(1 + n), provided nε < 1, with r_{max} = n^{n}(1 + ε)^{n+1}/(1 + n)^{n+1}, so")
-EQ(sv("Π", "c") + EQS + FRAC(Tt("1"), Tt("e") + sv("r", "max")) + EQS + FRAC(SUPN(DEL(Tt("1") + PLUS + V("n")), Tt("1+n")), Tt("e") + SUPN(V("n"), V("n")) + SUPN(DEL(Tt("1") + PLUS + V("ε")), Tt("1+n"))) + Tt(",   ") + sv("Π", "c") + Tt("→") + SUPN(Tt("e"), Tt("−1")) + FRAC(SUPN(DEL(Tt("1") + PLUS + V("n")), Tt("1+n")), SUPN(V("n"), V("n"))) + Tt("   (ε → 0)."), "ePic")
+EQ(sv("Π", "c") + EQS + FRAC(Tt("1"), Tt("e") + sv("r", "max")) + EQS + FRAC(SUPN(DEL(Tt("1") + PLUS + V("n")), Tt("1+") + V("n")), Tt("e") + SUPN(V("n"), V("n")) + SUPN(DEL(Tt("1") + PLUS + V("ε")), Tt("1+") + V("n"))) + Tt(",   ") + sv("Π", "c") + Tt("→") + SUPN(Tt("e"), Tt("−1")) + FRAC(SUPN(DEL(Tt("1") + PLUS + V("n")), Tt("1+") + V("n")), SUPN(V("n"), V("n"))) + Tt("   (") + V("ε") + Tt(" → 0)."), "ePic")
 P("The finite-ε value is %.4f, %.4f and %.4f for n = 1, 3/2 and 2 at ε = 3 × 10^{−3}, against the ε → 0 limits %.4f, %.4f and %.4f; the finite-ε formula explains why the integrated values of @T:fk@ at small Θ lie slightly below the limits. "
   "Below Π_{c} the quasi-steady peak is ψθ_{peak} = −W_{0}(−Π/(eΠ_{c})), and close to the fold it follows ψθ_{peak} ≈ 1 − [2(1 − Π/Π_{c})]^{1/2}, the normal form of a saddle-node bifurcation of the algebraic "
   "equation [[strogatz2015,corless1996]]. This is a statement about the frozen-conversion algebraic manifold. For a finite batch the reactant is consumed and the temperature rise is bounded by the available "
@@ -382,7 +381,7 @@ TAB(rows, "Critical thermal-feedback number in the exponential (Frank-Kamenetski
     widths=[0.6, 0.7, 2.0, 2.0, 1.3], label="fk")
 P("*Arrhenius kinetics.* For a single Arrhenius source at a temperature rise x = ΔT/T_{∞} the exponent is Ar·x/(1 + x), against Ar·x in the exponential model. With y = ψθ the frozen-conversion balance is "
   "y exp[−y/(1 + y/Ar)] = Πr, and its fold is at y_{f} satisfying y = (1 + y/Ar)^{2}; the critical number is then")
-EQ(sv("Π", "c") + SUPN(Tt(""), Tt("Arr")) + EQS + sv("Π", "c") + SUPN(Tt(""), Tt("FK")) + Tt(" · e ") + SUBN(V("y"), V("f")) + Tt("exp") + DEL(MINUS + FRAC(SUBN(V("y"), V("f")), Tt("1") + PLUS + SUBN(V("y"), V("f")) + Tt("/Ar"))) + Tt("≈") + sv("Π", "c") + SUPN(Tt(""), Tt("FK")) + Tt("exp") + DEL(FRAC(Tt("1"), Tt("Ar"))), "earr")
+EQ(sv("Π", "c") + SUPN(Tt(""), Tt("Arr")) + EQS + sv("Π", "c") + SUPN(Tt(""), Tt("FK")) + Tt(" · e ") + SUBN(V("y"), Tt("f")) + Tt("exp") + DEL(MINUS + FRAC(SUBN(V("y"), Tt("f")), Tt("1") + PLUS + SUBN(V("y"), Tt("f")) + Tt("/") + V("Ar"))) + Tt("≈") + sv("Π", "c") + SUPN(Tt(""), Tt("FK")) + Tt("exp") + DEL(FRAC(Tt("1"), V("Ar"))), "earr")
 P("The factor exp(1/Ar) is only the first-order (large-Ar) estimate of the first factor; for Ar = %.1f–%.1f the two differ by about %s %%. With distinct activation energies of the competing rate terms the fold condition "
   "must be solved for the actual sum of rates. We tested the correction with the true Arrhenius model (ungated, isothermal start, both k_{1} and k_{2} Arrhenius) at 120, 140 and 160 °C (Ar = %.1f–%.1f) and "
   "Θ = 0.01, 0.03, 0.1, bisecting the adiabatic rise to the same operational threshold (@T:arr@). The prediction Π_{c}^{FK}(Θ) times the fold factor is within %s %% of the Arrhenius threshold in every one of the nine "
@@ -397,24 +396,24 @@ for r in AR:
                  f3(r["prediction_first_order"]), "%+.1f %%" % (100 * (r["prediction_first_order"] / r["Pi_c_arrhenius"] - 1)), f3(r["Pi_c_gated"]) if r["Pi_c_gated"] else "–"])
 TAB(rows, "Operational critical number of the Arrhenius model (ungated, isothermal start; peak rise 0.3ΔT_{ad}) against the exponential-model value FK(Θ) multiplied by the frozen-fold factor of Eq. (@earr@) and by exp(1/Ar) "
           "(difference = prediction/Arrhenius − 1), and the effect of a release lag.", widths=[0.5, 0.45, 0.45, 0.8, 0.75, 0.7, 0.7, 0.75, 0.7, 0.8], size=7.5, label="arr")
-FIG("fig3_criticality.png", "(a) Operational critical number against Θ for n = 1, 3/2 and 2 (points: integrations; dashed: finite-ε Eq. (@ePic@)). (b) Quasi-steady overshoot below Π_{c}: Lambert-W formula, fold normal form, and integrations. "
-    "(c) Arrhenius operational critical number against FK(Θ) times the frozen-fold factor.", "Three panels. (a) Critical number against Theta for three reaction orders with asymptotes. (b) Peak overshoot against Pi over Pi critical with Lambert-W curve and integrated points. (c) Scatter of Arrhenius critical number against prediction near the identity line.")
+FIG("fig3_criticality.png", "(a) Operational critical number against Θ for n = 1, 3/2 and 2 (points: numerical integrations, not joined by a line; dashed: finite-ε Eq. (@ePic@)). (b) Quasi-steady overshoot below Π_{c}: Lambert-W formula, fold normal form, and integrations. "
+    "(c) Arrhenius operational critical number against FK(Θ) times the frozen-fold factor. All points are results of numerical integration of the model equations; no experimental data are shown.", "Three panels. (a) Critical number against Theta for three reaction orders with asymptotes. (b) Peak overshoot against Pi over Pi critical with Lambert-W curve and integrated points. (c) Scatter of Arrhenius critical number against prediction near the identity line.")
 
 HD("3.5 Proposition 5: continuous-flow reactor, steady states, stability, and hysteresis", 2)
 P("Let fresh resin of conversion 0 enter at the wall temperature with residence time τ_{res}, and let ϑ = τ_{th}/τ_{res} and D = k_{2}τ_{res}. In units of τ_{res} and in the exponential model,")
-EQ(FRAC(V("dα"), Tt("dt′")) + EQS + V("D") + V("r") + MINUS + V("α") + Tt(",   ") + FRAC(V("dθ"), Tt("dt′")) + EQS + V("D") + V("r") + MINUS + V("θ") + DEL(Tt("1") + PLUS + FRAC(Tt("1"), Tt("ϑ"))) + Tt(",   ") + V("r") + EQS + DEL(V("ε") + PLUS + V("α")) + SUPN(DEL(Tt("1") + MINUS + V("α")), V("n")) + SUPN(Tt("e"), Tt("ψθ")) + Tt("."), "eflow")
+EQ(FRAC(Tt("d") + V("α"), Tt("d") + V("t′")) + EQS + V("D") + V("r") + MINUS + V("α") + Tt(",   ") + FRAC(Tt("d") + V("θ"), Tt("d") + V("t′")) + EQS + V("D") + V("r") + MINUS + V("θ") + DEL(Tt("1") + PLUS + FRAC(Tt("1"), V("ϑ"))) + Tt(",   ") + V("r") + EQS + DEL(V("ε") + PLUS + V("α")) + SUPN(DEL(Tt("1") + MINUS + V("α")), V("n")) + SUPN(Tt("e"), V("ψθ")) + Tt("."), "eflow")
 P("*Control parameter.* In the exponential model D is varied at fixed ϑ and ψ. This is a mathematical parameter sweep, not by itself a physical temperature sweep: a change of the wall temperature also "
   "changes ψ = ΔT_{ad}E_{2}/(RT_{∞}^{2}), ε = k_{1}/k_{2} and Ar. The ln D windows below are therefore windows in the parameter D, and no conversion of ln D into kelvin is claimed from them. A physical "
   "temperature path with Arrhenius kinetics, in which ψ, ε and D all change with T_{∞}, is simulated separately at the end of this section. A sweep of the flow rate at fixed temperature changes τ_{res} "
   "and therefore ϑ, which is a different parameter path and is not analyzed here.")
 P("**Proposition 5 (steady states).** The steady states satisfy θ = ϑα/(1 + ϑ) = κα/ψ and are given parametrically by")
-EQ(V("D") + EQS + FRAC(V("α"), DEL(V("ε") + PLUS + V("α")) + SUPN(DEL(Tt("1") + MINUS + V("α")), V("n")) + Tt("exp") + DEL(V("κα"))) + Tt(",   ") + V("κ") + EQS + FRAC(Tt("ψϑ"), Tt("1") + PLUS + Tt("ϑ")) + Tt("."), "ess")
+EQ(V("D") + EQS + FRAC(V("α"), DEL(V("ε") + PLUS + V("α")) + SUPN(DEL(Tt("1") + MINUS + V("α")), V("n")) + Tt("exp") + DEL(V("κα"))) + Tt(",   ") + V("κ") + EQS + FRAC(V("ψϑ"), Tt("1") + PLUS + V("ϑ")) + Tt("."), "ess")
 P("*Proof.* At steady state the conversion balance gives rD = α, and the heat balance gives θ(1 + 1/ϑ) = rD = α, so θ = ϑα/(1 + ϑ) = κα/ψ; substituting ψθ = κα into rD = α gives the expression. ∎ "
   "D(α) is non-monotonic, so three steady states coexist in a window of D, if and only if d ln D/dα = 0 has two roots, n/(1 − α) + ε/[α(ε + α)] = κ. The left side has a single minimum, so three equilibria exist "
   "if and only if κ > κ_{c} = min_{α}[n/(1 − α) + ε/(α(ε + α))] (κ_{c} = %.3f for n = 3/2 and ε = 3 × 10^{−3}; κ_{c} → n as ε → 0). Equilibrium multiplicity does not by itself establish two stable states or "
   "switching at both folds." % KC)
 P("**Stability.** Let q = α/(ε + α) − nα/(1 − α). Differentiating Eq. (@eflow@) at a steady state, with D and ϑ fixed, gives the Jacobian in the variables (α, θ)")
-EQ(V("J") + EQS + Tt("[[ q − 1 ,  ψα ] , [ q ,  ψα − 1 − 1/ϑ ]]"), "eJ")
+EQ(V("J") + EQS + Tt("[[ ") + V("q") + Tt(" − 1 ,  ") + V("ψα") + Tt(" ] , [ ") + V("q") + Tt(" ,  ") + V("ψα") + Tt(" − 1 − 1/") + V("ϑ") + Tt(" ]]"), "eJ")
 P("with trace q + ψα − 2 − 1/ϑ and determinant (1 + 1/ϑ)(1 − q) − ψα. At a fold the determinant vanishes and the other eigenvalue equals the trace. The lower fold has a negative trace for all cases below, so it is a "
   "saddle-node at which the lower (unreacted) state disappears. The upper fold has a negative trace, and is a saddle-node at which a stable upper state disappears, only for ψ below about %.2f (ϑ = 1); above it the "
   "trace at the upper fold is positive (+%.2f for ψ = 20: α = %.4f, ln D = %.3f), so the upper branch near its fold is unstable and becomes stable only above a larger conversion α_{H} at which the trace vanishes "
@@ -477,7 +476,7 @@ for psi in (3.0, 4.5, 8.0, 20.0):
 TAB(rows, "Integrated hysteresis-loop area ∮α d ln D of the sweeps at seven sweep rates v (per residence time), with the attractor loop area, the fold-to-fold multiplicity area and a power-law fit A(v) = A_{0} + cv^{p} "
           "(ϑ = 1, n = 3/2, ε = 3 × 10^{−3}).", widths=[0.35, 0.45, 0.7, 0.7, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.85], size=7, label="flow")
 FIG("fig4_flow_reactor.png", "(a) Steady-state curve of the flow reactor at ψ = 20 (κ = 10) with stable (solid) and unstable (dashed) segments, the two folds (squares) and the Hopf-type point (circle). (b) Sweep loops "
-    "at two rates against the steady states. (c) Loop area against sweep rate, the power-law fit, and the attractor loop area.", "Three panels. (a) Steady conversion against ln D with solid stable and dashed unstable parts and marked fold and Hopf points. (b) Up and down sweep loops. (c) Loop area against sweep rate approaching the attractor loop area.")
+    "at two rates against the steady states. (c) Loop area from numerical integration (points, not joined by a line) against sweep rate, the power-law fit (line), and the attractor loop area (dashed).", "Three panels. (a) Steady conversion against ln D with solid stable and dashed unstable parts and marked fold and Hopf points. (b) Up and down sweep loops. (c) Loop area against sweep rate approaching the attractor loop area.")
 
 P("*Physical temperature path with Arrhenius kinetics.* To avoid the fixed-ψ approximation, the continuous-flow reactor was also simulated with both k_{1}(T) and k_{2}(T) Arrhenius (@T:par@), τ_{res} = τ_{th} = %.0f min "
   "(ϑ = 1), n = 3/2 and a wall temperature T_{∞} that is varied, so that ψ, ε and D change along the path. The steady states are obtained exactly (conversion balance solved for T at given α, T_{∞} = T − ΔT_{ad}ϑα/(1 + ϑ)) "
@@ -497,7 +496,7 @@ for dtad in (120.0, 160.0, 220.0):
 TAB(rows, "Window of two stable states on a physical temperature path with Arrhenius kinetics (τ_{res} = τ_{th} = 3 min, n = 3/2): steady states exact, stability from the numerical Jacobian; the last column is the "
           "fixed-ψ exponential-model estimate at the local ψ and ε of the ignition fold, for comparison.", widths=[0.6, 0.9, 0.9, 0.9, 1.0, 0.5, 0.7, 0.9], size=7.5, label="arrflow")
 FIG("fig5_arrhenius_path.png", "(a) Steady states (solid: stable; dashed: unstable) and temperature ramps on the Arrhenius path (ΔT_{ad} = 220 K, τ_{res} = τ_{th} = 3 min); the dash-dot lines mark the stable window. "
-    "(b) Value of ln D at which the sweep of the exponential model (ψ = 20, v = 0.001) leaves the upper branch, against the integrator tolerance, between the Hopf-type point and the upper fold.",
+    "(b) Value of ln D at which the sweep of the exponential model (ψ = 20, v = 0.001) leaves the upper branch, against the integrator tolerance (points: numerical integrations, not joined by a line), between the Hopf-type point and the upper fold.",
     "Two panels. (a) Conversion against wall temperature with stable and unstable steady states and up and down temperature ramps. (b) Extinction value of ln D against integrator tolerance lying between the Hopf-type point and the upper fold.")
 
 HD("3.6 Closed forms as fitting functions: a synthetic-data test", 2)
@@ -605,6 +604,7 @@ rows = [["Study", "Method", "Grid", "Compared with"],
 TAB(rows, "Run table of the numerical studies; every result is reproduced by code/run_all.py.", widths=[1.5, 2.1, 2.0, 1.4], size=8, label="runs")
 
 HD("References")
+H.AUTO_MATH = False
 for k in CITE:
     q = doc.add_paragraph()
     H.add_rich(q, "%d. %s" % (CITE.index(k) + 1, REFS[k]["entry"]), size=10)
