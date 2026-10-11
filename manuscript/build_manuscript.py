@@ -22,8 +22,8 @@ os.makedirs(OUT, exist_ok=True)
 R = json.load(open(os.path.join(ROOT, "results.json"), encoding="utf-8"))
 REFS = json.load(open(os.path.join(ROOT, "refs", "refs_cache.json"), encoding="utf-8"))
 ZEN = json.load(open(os.path.join("C:" + os.sep, "YouTube", "_gac_zenodo_state.json")))
-SW_DOI, PP_DOI = (ZEN.get("software_1.3.1") or ZEN.get("software_1.3.0") or ZEN.get("software_1.2.0") or ZEN["software"])["doi"], (ZEN.get("publication_v5") or ZEN.get("publication_v4") or ZEN.get("publication_v3") or ZEN["publication"])["doi"]
-RELEASE = os.environ.get("RELEASE_TAG", "v1.3.1")
+SW_DOI, PP_DOI = (ZEN.get("software_1.3.2") or ZEN.get("software_1.3.1") or ZEN.get("software_1.3.0") or ZEN.get("software_1.2.0") or ZEN["software"])["doi"], (ZEN.get("publication_v6") or ZEN.get("publication_v5") or ZEN.get("publication_v4") or ZEN.get("publication_v3") or ZEN["publication"])["doi"]
+RELEASE = os.environ.get("RELEASE_TAG", "v1.3.2")
 REPO = "https://github.com/sandlerleon/gated-autocatalysis-criticality"
 
 TITLE = "Closed-Form Storage Stability, Induction Delay, and Thermal-Feedback Criticality of Melt-Gated Autocatalytic Cure"

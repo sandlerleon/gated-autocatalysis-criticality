@@ -60,3 +60,7 @@ Retargeted to *Reaction Kinetics, Mechanisms and Catalysis*: Springer numbering 
 ## v1.3.1
 
 Storage-conversion and design-rule comparisons recomputed with K = 3201 capsule quantiles (K = 801 left a 1 % discretization error at sigma = 2 C; convergence now against K = 6401); the storage inversion is described as exact only within the Gaussian-logistic small-conversion model; Propositions 4 and 5 are stated as derived for a fully released (ungated) catalyst in abstract, conclusion and open problems; duplicated 'Table Table' references fixed. Other results are identical to v1.3.0.
+
+## v1.3.2
+
+Pre-review revision for *Reaction Kinetics, Mechanisms and Catalysis*: markers only (no joining lines) for the computed points of Figs. 3a, 4c and 5b, with captions stating that they are numerical integrations; abstract starts with the results; no shading in tables; quantities set in italic and units, constants, function names and descriptive subscripts upright following the ACS mathematics stylesheet (also in figure labels). Numerical results are identical to v1.3.1 (`results.json` unchanged).

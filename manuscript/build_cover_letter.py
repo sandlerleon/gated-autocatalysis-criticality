@@ -11,7 +11,7 @@ sys.path.insert(0, HERE)
 import docx_helpers as H  # noqa: E402
 
 ZEN = json.load(open(os.path.join("C:" + os.sep, "YouTube", "_gac_zenodo_state.json")))
-SW, PP = (ZEN.get("software_1.3.1") or ZEN.get("software_1.3.0") or ZEN.get("software_1.2.0") or ZEN["software"])["doi"], (ZEN.get("publication_v5") or ZEN.get("publication_v4") or ZEN.get("publication_v3") or ZEN["publication"])["doi"]
+SW, PP = (ZEN.get("software_1.3.2") or ZEN.get("software_1.3.1") or ZEN.get("software_1.3.0") or ZEN.get("software_1.2.0") or ZEN["software"])["doi"], (ZEN.get("publication_v6") or ZEN.get("publication_v5") or ZEN.get("publication_v4") or ZEN.get("publication_v3") or ZEN["publication"])["doi"]
 R = json.load(open(os.path.join(HERE, "..", "results.json"), encoding="utf-8"))
 REPO = "https://github.com/sandlerleon/gated-autocatalysis-criticality"
 TITLE = "Closed-Form Storage Stability, Induction Delay, and Thermal-Feedback Criticality of Melt-Gated Autocatalytic Cure"
@@ -74,7 +74,7 @@ para("The model equations, the illustrative parameter set, the capsule-populatio
      "The present paper asks a different question, namely which statements about storage, delay, criticality and reactor stability can be derived analytically, and Table 1 of the manuscript lists the contributions that are specific to it. "
      "I disclose the related submission here so that the Editors can judge the overlap, and I will gladly provide the earlier manuscript on request.")
 para("Data, code and disclosures", bold=True, after=3)
-para("All code, tests, raw result tables and figure scripts are public at %s (release v1.3.1) and archived at https://doi.org/%s; the manuscript is available as a preprint at https://doi.org/%s. "
+para("All code, tests, raw result tables and figure scripts are public at %s (release v1.3.2) and archived at https://doi.org/%s; the manuscript is available as a preprint at https://doi.org/%s. "
      "The manuscript describes in Section 2.3 and in the Statements and Declarations the use of Claude Sonnet 5.5 (Anthropic; model identifier as reported by the Claude Code environment of the Claude desktop application) for derivations, code, figures and drafting, and states that every number "
      "is produced by the released scripts and that I am responsible for the content. I am the sole author, have no competing interests and received no funding. The manuscript is not under consideration elsewhere." % (REPO, SW, PP))
 para("Thank you for considering the paper.")
